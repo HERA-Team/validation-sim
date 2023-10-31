@@ -7,7 +7,7 @@ import utils
 H4C_FREQS = utils.H4C_FREQS
 H4C_CHANNEL_WIDTH = utils.H4C_CHANNEL_WIDTH
 CFGDIR, SKYDIR, OUTDIR = utils.CFGDIR, utils.SKYDIR, utils.OUTDIR
-H4C_TELE_CONFIG, H4C_ARRAY_LAYOUT = utils.H4C_TELE_CONFIG, utils.H4C_ARRAY_LAYOUT
+H4C_TELE_CONFIG = utils.H4C_TELE_CONFIG
 NTIMES, INTEGRATION, START_TIME = (
     utils.VALIDATION_SIM_NTIMES,
     utils.VALIDATION_SIM_INTEGRATION_TIME,
@@ -15,6 +15,12 @@ NTIMES, INTEGRATION, START_TIME = (
 )
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+
+# Modify the next two lines
+MY_LAYOUT = '/users/lmcbride/lustre/validation-sim/config_files/array_layout_hera_h4c.txt'
+HI_SKY_MODEL = '/users/lmcbride/lustre/cosmic_roomba/sims/sky/HI_sky.skyh5'
+# MY_LAYOUT = "my_layout.txt"
+# HI_SKY_MODEL = "hi.skyh5"
 
 
 def quoted_presenter(dumper, data):
@@ -25,10 +31,11 @@ def quoted_presenter(dumper, data):
 yaml.add_representer(str, quoted_presenter)
 
 
-def _make_h4c_obsparam(freq_range, freqs, sky_model, chunks):
+def _make_h4c_obsparam(freq_range, freqs, chunks):
     """Logic of the h4c cli function.
 
     This allow the function to be called from other modules."""
+    sky_model = "hi"
     freq_chans = np.arange(*freq_range)
     if freqs:
         extra_freqs = freqs[np.isin(freqs, freq_chans, invert=True)]
@@ -56,9 +63,9 @@ def _make_h4c_obsparam(freq_range, freqs, sky_model, chunks):
                     "channel_width": H4C_CHANNEL_WIDTH,
                     "start_freq": float(fv),
                 },
-                "sources": {"catalog": f"{SKYDIR}/{sky_model}/fch{fch:04d}.skyh5"},
+                "sources": {"catalog": f""},
                 "telescope": {
-                    "array_layout": f"{H4C_ARRAY_LAYOUT}",
+                    "array_layout": f"{MY_LAYOUT}",
                     "telescope_config_name": f"{H4C_TELE_CONFIG}",
                     "select": {"freq_buffer": 3.0e6},
                 },
@@ -108,22 +115,14 @@ def cli():
     help="Frequency channel, allow multiple, add to --freq-range",
 )
 @click.option(
-    "-sm",
-    "--sky_model",
-    default="ptsrc",
-    show_default=True,
-    type=click.Choice(["ptsrc", "diffuse_nside256", "eor"], case_sensitive=True),
-    help="Sky model to simulate",
-)
-@click.option(
     "--chunks",
     default=3,
     show_default=True,
     help="Split simulation into a number of time chunks",
 )
-def h4c_cli(freq_range, freqs, sky_model, chunks):
-    """Make obsparams for H4C simulations given a sky model and frequencies."""
-    _make_h4c_obsparam(freq_range, freqs, sky_model, chunks)
+def h4c_cli(freq_range, freqs, chunks):
+    """Make obsparams for H4C simulations for HI sky model."""
+    _make_h4c_obsparam(freq_range, freqs, chunks)
 
 
 if __name__ == "__main__":
