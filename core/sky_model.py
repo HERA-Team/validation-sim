@@ -556,6 +556,19 @@ def make_gsm_model(channels: list[int], nside: int = 256) -> SkyModel:
         )
         write_sky(gsm_model, f"gsm_nside{nside}", fch)
 
+def make_uniform_eor_model(channels: list[int], nside: int = 256) -> SkyModel:
+    """Make a GSM SkyModel at a given frequency channel."""
+    freqs = H4C_FREQS[channels]
+
+    amps = 10**-23.87804823 * freqs**3.0603514
+
+    for fch, freq in zip(channels, freqs):
+        #gsm_map = make_gsm_map(freq, nside=nside, smooth=True, gsm=gsm)
+        gsm_model = make_healpix_type_sky_model(
+            np.arange(hp.nside2npix(nside)) * amps[fch], freq, nside, inframe="galactic", outframe="icrs", to_point=True
+        )
+        write_sky(gsm_model, f"uniform_eor_nside{nside}", fch)
+
 
 def make_diffuse_model(channels: int, nside: int = 256) -> SkyModel:
     """Make a diffuse SkyModel (GSM + confusion at a given frequency channel."""

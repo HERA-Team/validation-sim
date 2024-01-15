@@ -99,6 +99,10 @@ def sky_model(
             sm.make_ptsrc_model(channels, nside)
         elif sky_model == "eor":
             raise NotImplementedError("eor sky model not supported yet")
+        elif sky_model == "uniform-eor":
+            sm.make_uniform_eor_model(channels, nside)
+        else:
+            raise ValueError(f"Unknown sky model type: {sky_model}")
     else:
         sm.run_make_sky_model(
             sky_model,
