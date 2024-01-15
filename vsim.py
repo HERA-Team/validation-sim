@@ -64,7 +64,7 @@ option_nside = click.option("--nside", default=256, show_default=True)
 
 
 @cli.command("sky-model")
-@click.argument("sky_model", type=click.Choice(["gsm", "diffuse", "ptsrc", "eor"]))
+@click.argument("sky_model", type=click.Choice(["gsm", "diffuse", "ptsrc", "eor", "uniform-eor"]))
 @_cli.opts.channels
 @_cli.opts.freq_range
 @_cli.opts.slurm_override
