@@ -570,7 +570,7 @@ def make_uniform_eor_model(channels: list[int], nside: int = 256) -> SkyModel:
     for fch, freq in zip(channels, freqs):
         # gsm_map = make_gsm_map(freq, nside=nside, smooth=True, gsm=gsm)
         gsm_model = make_healpix_type_sky_model(
-            np.arange(hp.nside2npix(nside)) * amps[fch],
+            np.ones(hp.nside2npix(nside)) * amps[fch],
             freq,
             nside,
             inframe="galactic",
