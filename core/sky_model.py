@@ -560,7 +560,7 @@ def make_uniform_eor_model(channels: list[int], nside: int = 256) -> SkyModel:
     """Make a GSM SkyModel at a given frequency channel."""
     freqs = H4C_FREQS[channels]
 
-    amps = 10**-23.87804823 * freqs**3.0603514
+    amps = (units.Jy / units.sr) * 10**-23.87804823 * freqs.to_value("Hz")**3.0603514
 
     for fch, freq in zip(channels, freqs):
         #gsm_map = make_gsm_map(freq, nside=nside, smooth=True, gsm=gsm)
