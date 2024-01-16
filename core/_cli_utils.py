@@ -170,8 +170,7 @@ class opts:
         "-d", "--dry-run", is_flag=True, help="Pass the flag to hera-sim-vis.py"
     )
     zero_beam_at_horizon = click.option(
-        "--zero-beam-at-horizon",
-        "--no-zero-beam-at-horizon",
+        "--zero-beam-at-horizon/--no-zero-beam-at-horizon",
         default=False,
         help="Whether to use the Vivaldi beam with zeros at the horizon",
     )
