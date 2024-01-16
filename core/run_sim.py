@@ -41,6 +41,7 @@ def run_validation_sim(
     spline_interp_order: int = 3,
     do_time_chunks: list[int] | None = None,
     profile: bool = False,
+    zero_beam_at_horizon: bool = False,
 ):
     """Run a full validation sim on SLURM compute."""
     simulator_config = (
@@ -58,6 +59,7 @@ def run_validation_sim(
         spline_interp_order=spline_interp_order,
         force=force_remake_obsparams,
         do_chunks=do_time_chunks,
+        zeros_at_horizon=zero_beam_at_horizon,
     )
 
     if not do_time_chunks:

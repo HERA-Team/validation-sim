@@ -169,6 +169,12 @@ class opts:
     dry_run = click.option(
         "-d", "--dry-run", is_flag=True, help="Pass the flag to hera-sim-vis.py"
     )
+    zero_beam_at_horizon = click.option(
+        "--zero-beam-at-horizon",
+        "--no-zero-beam-at-horizon",
+        default=False,
+        help="Whether to use the Vivaldi beam with zeros at the horizon",
+    )
 
     @classmethod
     def add_opts(cls, fnc, ignore=None):

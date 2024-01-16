@@ -33,7 +33,7 @@ def cli():
 
 @cli.command("runsim")
 @_cli.opts.add_opts
-def hera_cli(channels, freq_range, **kwargs):
+def runsim(channels, freq_range, **kwargs):
     """Run HERA validation simulations.
 
     Use the default parameters, configuration files, and directories for HERA sims
@@ -51,12 +51,19 @@ def hera_cli(channels, freq_range, **kwargs):
 @_cli.opts.freq_range
 @_cli.opts.sky_model
 @_cli.opts.n_time_chunks
-def make_obsparams(layout, freq_range, channels, sky_model, n_time_chunks):
+@_cli.opts.zero_beam_at_horizon
+def make_obsparams(
+    layout, freq_range, channels, sky_model, n_time_chunks, zero_beam_at_horizon
+):
     """Make obsparams for H4C simulations given a sky model and frequencies."""
     channels = _cli.parse_channels(channels, freq_range)
 
     make_hera_obsparam(
-        layout=layout, channels=channels, sky_model=sky_model, chunks=n_time_chunks
+        layout=layout,
+        channels=channels,
+        sky_model=sky_model,
+        chunks=n_time_chunks,
+        zeros_at_horizon=zero_beam_at_horizon,
     )
 
 
@@ -64,7 +71,9 @@ option_nside = click.option("--nside", default=256, show_default=True)
 
 
 @cli.command("sky-model")
-@click.argument("sky_model", type=click.Choice(["gsm", "diffuse", "ptsrc", "eor", "uniform-eor"]))
+@click.argument(
+    "sky_model", type=click.Choice(["gsm", "diffuse", "ptsrc", "eor", "uniform-eor"])
+)
 @_cli.opts.channels
 @_cli.opts.freq_range
 @_cli.opts.slurm_override

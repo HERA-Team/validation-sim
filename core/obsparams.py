@@ -21,13 +21,16 @@ CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 @cache
 def make_tele_config(
-    freq_interp_kind: str = "cubic", spline_interp_order: int = 3
+    freq_interp_kind: str = "cubic",
+    spline_interp_order: int = 3,
+    zeros_at_horizon: bool = False,
 ) -> Path:
     """Make a telescope config file."""
     beampath = utils.HPC_CONFIG["paths"]["beams"]
+    zero = "_zero_edge" if zeros_at_horizon else ""
     config = f"""
 beam_paths:
-  0: '{beampath}/NF_HERA_Vivaldi_efield_beam_extrap.fits'
+  0: '{beampath}/NF_HERA_Vivaldi_efield_beam_extrap{zero}.fits'
 telescope_location: {str(utils.HERA_LOC)}
 telescope_name: HERA
 freq_interp_kind: '{freq_interp_kind}'
@@ -64,6 +67,7 @@ def make_hera_obsparam(
     spline_interp_order: int = 3,
     season: str = "H4C",
     force: bool = False,
+    zeros_at_horizon: bool = False,
 ):
     """
     Logic of the h4c cli function.
@@ -95,7 +99,9 @@ def make_hera_obsparam(
         )
 
     tele_config_file = make_tele_config(
-        freq_interp_kind=freq_interp_kind, spline_interp_order=spline_interp_order
+        freq_interp_kind=freq_interp_kind,
+        spline_interp_order=spline_interp_order,
+        zeros_at_horizon=zeros_at_horizon,
     )
 
     obsparams_dir = utils.OBSPDIR / utils.OBSPARAM_DIRFMT.format(
