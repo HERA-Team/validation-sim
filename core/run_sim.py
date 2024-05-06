@@ -37,15 +37,19 @@ def run_validation_sim(
     force_remake_obsparams: bool,
     log_level: str,
     dry_run: bool,
+    simulator: str = "matvis",
     freq_interp_kind: str = "cubic",
     spline_interp_order: int = 1,
     do_time_chunks: list[int] | None = None,
     profile: bool = False,
 ):
     """Run a full validation sim on SLURM compute."""
-    simulator_config = (
-        utils.REPODIR / "visgpu.yaml" if gpu else utils.REPODIR / "viscpu.yaml"
-    )
+    sgpu = "gpu" if gpu else "cpu"
+    simulator_config = utils.REPODIR / f"{simulator}-{sgpu}.yaml"
+
+    assert (
+        simulator_config.exists()
+    ), f"Simulator config file {simulator_config.name} does not exist."
 
     logger.info(f"Frequency channels to run: {channels}")
 
