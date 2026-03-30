@@ -14,6 +14,7 @@ from .monitor import type_click_app as monitor_app
 
 # TODO: this should be better refactored into a "profiling" sub-group
 from .process_fftvis_profile import typer_click_app as process_fftvis_profile_app
+from .rechunk_fast import click_app as rechunk_fast_app
 
 logging.basicConfig(
     level="NOTSET",
@@ -45,7 +46,7 @@ def runsim(channels, freq_range, **kwargs):
     Use the default parameters, configuration files, and directories for HERA sims
     (see make_obsparams.py).
     """
-    from core.run_sim import run_validation_sim
+    from ..run_sim import run_validation_sim
 
     channels = _cli.parse_channels(channels, freq_range)
     kwargs.pop("beam_interpolator", None)
@@ -77,7 +78,7 @@ def make_obsparams(
     do_time_chunks,
 ):
     """Make obsparams for H4C simulations given a sky model and frequencies."""
-    from core.obsparams import make_hera_obsparam
+    from ..obsparams import make_hera_obsparam
 
     channels = _cli.parse_channels(channels, freq_range)
 
@@ -129,14 +130,12 @@ def sky_model(
     """
     channels = _cli.parse_channels(channels, freq_range)
     if local:
-        from core import sky_model as sm
+        from .. import sky_model as sm
 
         if sky_model == "gsm":
             sm.make_gsm_model(channels, nside, label=label)
         elif sky_model == "diffuse":
-            sm.make_diffuse_model(
-                channels, nside, with_confusion=with_confusion, label=label
-            )
+            sm.make_diffuse_model(channels, nside, with_confusion=with_confusion, label=label)
         elif sky_model == "ptsrc":
             sm.make_ptsrc_model(channels, nside, label=label)
         elif sky_model == "grf-eor":
@@ -148,7 +147,7 @@ def sky_model(
         else:
             raise ValueError(f"Unknown sky model: {sky_model}")
     else:
-        from core.run_sky_model import run_make_sky_model
+        from ..run_sky_model import run_make_sky_model
 
         run_make_sky_model(
             sky_model,
@@ -169,7 +168,7 @@ def sky_model(
 @click.option("--low-memory/--fast-cpu", default=True)
 @click.option("--local/--slurm", default=False)
 def grf_realization(nside, seed, local, low_memory):
-    from core.grf_realization import run_compute_grf_realization
+    from ..grf_realization import run_compute_grf_realization
 
     run_compute_grf_realization(nside=nside, seed=seed, low_memory=low_memory)
 
@@ -179,7 +178,7 @@ def grf_realization(nside, seed, local, low_memory):
 @click.option("--ell-max", default=1250)
 @click.option("--local/--slurm", default=False)
 def grf_covariance(test_mode, ell_max, local):
-    from core.grf_covariance import compute_grf_covariance, run_compute_grf_covariance
+    from ..grf_covariance import compute_grf_covariance, run_compute_grf_covariance
 
     if local:
         compute_grf_covariance(test_mode, ell_max=ell_max)
@@ -277,7 +276,16 @@ def cornerturn(
     else:
         estimated_time = f"{int(estimated_time):02d}:{estimated_minutes:02d}:00"
 
-    slurm_override = (*slurm_override, ("job-name", f"{sky_model}-ct"), ("output", f"{log_dir}/%J.out"), ("nodes", "1"), ("ntasks", "1"), ("cpus-per-task", "16"), ("mem", "31GB"), ("time", estimated_time))
+    slurm_override = (
+        *slurm_override,
+        ("job-name", f"{sky_model}-ct"),
+        ("output", f"{log_dir}/%J.out"),
+        ("nodes", "1"),
+        ("ntasks", "1"),
+        ("cpus-per-task", "16"),
+        ("mem", "31GB"),
+        ("time", estimated_time),
+    )
 
     sbatch = _cli._get_sbatch_program(gpu=False, slurm_override=slurm_override)
 
@@ -313,3 +321,4 @@ def cornerturn(
 
 cli.add_command(monitor_app, name="monitor")
 cli.add_command(process_fftvis_profile_app, name="process-fftvis-profile")
+cli.add_command(rechunk_fast_app, name="rechunk-fast")

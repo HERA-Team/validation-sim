@@ -8,7 +8,6 @@ Output files have the following prototype:
     zen.LST.{lst:.7f}[.{sky_cmp}].uvh5
 """
 
-import argparse
 import logging
 import operator
 import os
@@ -20,7 +19,7 @@ from pathlib import Path
 import h5py
 import numpy as np
 import psutil
-from hera_cli_utils import parse_args, run_with_profiling
+import typer
 from pyuvdata.uvdata import FastUVH5Meta
 
 logger = logging.getLogger("rechunk")
@@ -50,9 +49,7 @@ def find_all_files(
             else:
                 logger.warning(msg)
     if not all_files:
-        raise FileNotFoundError(
-            f"No files found with prototype {prototype} in {base_dir}"
-        )
+        raise FileNotFoundError(f"No files found with prototype {prototype} in {base_dir}")
 
     nchunks_counter = Counter([len(flist) for flist in all_files.values()])
     if len(nchunks_counter) > 1:
@@ -73,17 +70,14 @@ def find_all_files(
 
     if not fl0.blts_are_rectangular:
         raise ValueError(
-            "Your first file is not rectangular. "
-            "This script only works for rectangular files..."
+            "Your first file is not rectangular. This script only works for rectangular files..."
         )
 
     for ch in channels:
         all_files[ch] = [
             FastUVH5Meta(
                 fl,
-                blts_are_rectangular=fl0.blts_are_rectangular
-                if assume_blt_layout
-                else None,
+                blts_are_rectangular=fl0.blts_are_rectangular if assume_blt_layout else None,
                 time_axis_faster_than_bls=fl0.time_axis_faster_than_bls
                 if assume_blt_layout
                 else None,
@@ -126,9 +120,7 @@ def get_file_time_slices(
         times_remaining = lsts_per_chunk
 
         while True:
-            chunk.append(
-                (fl_index, slice(time_index, min(Ntimes, time_index + times_remaining)))
-            )
+            chunk.append((fl_index, slice(time_index, min(Ntimes, time_index + times_remaining))))
 
             if time_index + lsts_per_chunk >= Ntimes:
                 # We have to use the start of the next file
@@ -183,7 +175,7 @@ def reset_time_arrays(uvd, meta, times, lsts, ras, pas, slc, time_first):
 
 
 def _check_rectangularity_consistency(
-    raw_files: dict[int, list[Path]], time_first: bool
+    raw_files: dict[int, list[Path]], time_first: bool, channels: list[int]
 ):
     # Ensure all the files have rectangular blts with the same ordering.
     # This is a requirement for the chunking to work.
@@ -212,6 +204,7 @@ def chunk_files(
     max_freq_chunk_size: int = 100000000,
     remove_cross_pols: bool = False,
     conjugate: bool = False,
+    clobber: bool = False,
 ):
     """Chunk given files."""
     # Load the read files, and check that the read prototype is valid if provided.
@@ -298,23 +291,17 @@ def chunk_files(
 
     # Get the slices we'll need for each chunk.
     logger.info("Getting time slices for each output file...")
-    chunk_slices = get_file_time_slices(
-        raw_files[channels[0]], n_times_per_file, lst_wrap
-    )
+    chunk_slices = get_file_time_slices(raw_files[channels[0]], n_times_per_file, lst_wrap)
     logger.info("Got all time slices")
 
     # Figure out how many frequencies we can fit in the data at once.
     current_mem = ps.memory_info().rss
-    mem_left = (
-        max_mem_mb * (1024**2) - current_mem - 100 * (1024**2)
-    )  # leave 100MB for overhead
+    mem_left = max_mem_mb * (1024**2) - current_mem - 100 * (1024**2)  # leave 100MB for overhead
     mem_per_freq = n_times_per_file * uvd.Nbls * uvd.Npols * 8
     nfreqs = min(mem_left // mem_per_freq, uvd.Nfreqs, max_freq_chunk_size)
 
     nfreq_chunks = int(np.ceil(uvd.Nfreqs / nfreqs))
-    logger.info(
-        f"Going to use {nfreq_chunks} frequency chunks of {nfreqs} frequencies each."
-    )
+    logger.info(f"Going to use {nfreq_chunks} frequency chunks of {nfreqs} frequencies each.")
     logger.info(
         f"This is estimated to use {mem_per_freq * nfreqs / 1024**2:.2f} MB "
         f"of memory (of the {mem_left / 1024**2} MB left)."
@@ -366,7 +353,7 @@ def chunk_files(
         pth = save_dir / fname
 
         # Check if file already exists and only proceed if clobber is True
-        if not pth.exists() or args.clobber:
+        if not pth.exists() or clobber:
             # This just writes the header.
             logger.info("Initializing UVH5 file...")
             uvd.initialize_uvh5_file(pth, clobber=True)
@@ -375,12 +362,8 @@ def chunk_files(
             raw_file_paths = {ch: [f.path for f in raw_files[ch]] for ch in channels}
 
             for freq_chunk in range(nfreq_chunks):
-                logger.info(
-                    f"Obtaining frequency chunk {freq_chunk + 1}/{nfreq_chunks}..."
-                )
-                freq_slice = slice(
-                    freq_chunk * nfreqs, min((freq_chunk + 1) * nfreqs, uvd.Nfreqs)
-                )
+                logger.info(f"Obtaining frequency chunk {freq_chunk + 1}/{nfreq_chunks}...")
+                freq_slice = slice(freq_chunk * nfreqs, min((freq_chunk + 1) * nfreqs, uvd.Nfreqs))
                 this_nfreq = freq_slice.stop - freq_slice.start
                 SHAPE = (uvd.Nblts, this_nfreq, uvd.Npols)
                 full_dset = np.ndarray(SHAPE, dtype=DTYPE, buffer=shm.buf)
@@ -452,10 +435,7 @@ def write_freq_chunk(
         pth = raw_files[ch][flidx]
         with h5py.File(pth, "r") as fl:
             if time_first:
-                slices = [
-                    slice(slc.start + n, slc.start + this_ntimes + n)
-                    for n in range(nbls)
-                ]
+                slices = [slice(slc.start + n, slc.start + this_ntimes + n) for n in range(nbls)]
             else:
                 slices = slice(nbls * slc.start, nbls * (slc.start + this_ntimes))
 
@@ -472,9 +452,7 @@ def write_freq_chunk(
             logger.debug(f"After slicing out times, data has shape {data.shape}.")
 
             if data.ndim > 3:
-                raise ValueError(
-                    "Data has old array shapes. Please make it future array shapes."
-                )
+                raise ValueError("Data has old array shapes. Please make it future array shapes.")
 
             if data.shape[0] < this_nblts:
                 raise ValueError(
@@ -489,89 +467,89 @@ def write_freq_chunk(
         nblts_so_far += this_nblts
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "base_dir", type=str, help="Path to directory containing simulation data."
-    )
-    parser.add_argument("save_dir", type=str, help="Path to where to write new files.")
-    parser.add_argument(
-        "-r",
-        "--r-prototype",
-        type=str,
-        default="",
-        help="glob-parsable prototype of files to read. Can include a {channel} "
-        "format string which will be replaced by the channel internally.",
-    )
-    parser.add_argument(
-        "--channels",
-        type=str,
-        help='the channels to read, in the form "low~high", eg "0~1536"',
-        nargs="+",
-    )
-    parser.add_argument(
-        "-s", "--sky-cmp", type=str, default=None, help="Sky component (e.g. diffuse)."
-    )
+app = typer.Typer()
 
-    parser.add_argument(
-        "--chunk-size", type=int, default=180, help="Number of integrations per chunk."
-    )
-    parser.add_argument(
-        "--lst-wrap",
-        type=float,
-        default=None,
-        help="Where to perform the wrap in LST. Default is lowest LST in data.",
-    )
-    parser.add_argument(
-        "--clobber",
-        default=False,
-        action="store_true",
-        help="If set, rechunk and overwrite existing files. "
-        "Otherwise, skip the chunk if it already exists",
-    )
-    parser.add_argument(
-        "--ignore-missing-channels",
-        action="store_true",
-        help="merely warn if there are no files for a particular channel",
-    )
-    parser.add_argument(
-        "--assume-same-blt-layout",
-        action="store_true",
-        help="whether to assume each file has the same layout of baselines/times",
-    )
-    parser.add_argument(
-        "--is-rectangular",
-        action="store_true",
-        help="whether blts are rectangular",
-    )
-    parser.add_argument(
-        "--max-mem", type=int, default=1e9, help="Maximum memory to use in MB."
-    )
-    parser.add_argument(
-        "--nthreads", type=int, default=None, help="Number of threads to use."
-    )
-    parser.add_argument(
-        "--max-freq-chunk-size",
-        type=int,
-        default=1e6,
-        help="Maximum number of frequencies to read at once. Setting --max-mem "
-        "will try autodetect optimal setting.",
-    )
-    parser.add_argument(
-        "--remove-cross-pols",
-        action="store_true",
-        help="Whether to remove cross-pols from the data.",
-    )
-    args = parse_args(parser)
 
+@app.command()
+def main(
+    base_dir: Path,
+    save_dir: Path,
+    r_prototype: str = "",
+    channels: list[str] = (),
+    sky_cmp: str | None = None,
+    chunk_size: int = 180,
+    lst_wrap: float | None = None,
+    clobber: bool = False,
+    ignore_missing_channels: bool = False,
+    assume_same_blt_layout: bool = False,
+    is_rectangular: bool | None = None,
+    max_mem: int = 1e9,
+    nthreads: int | None = None,
+    max_freq_chunk_size: int = 1e6,
+    remove_cross_pols: bool = False,
+):
+    """
+    Re-chunk simulation files in time.
+
+    Parameters
+    ----------
+    base_dir
+        The path to direcotry containing simulation data
+    save_dir
+        Path to write new files to. Note that this directory must already exist and be
+        writable. The chunked files will be written to the same subdirectories as the
+        input files, but with "rechunk" appended to the name.
+    r_prototype
+        glob-parsable prototype of files to read. Can include a {channel} format string
+        which will be replaced by the channel internally. For example, if your files are
+        named like "zen.LST.12345.678.fch0000.uvh5", "zen.LST.12345.678.fch0001.uvh5",
+        etc, then you could use "zen.LST.*.fch{channel:04d}.uvh5" as the prototype, and
+        the script will replace {channel:04d} with the channel number (e.g. 0, 1, etc)
+        to find the files to read in.
+    channels
+        The channels to read, in the form "low~high", eg "0~1536". If not given, all
+        channels matching the prototype will be used.
+    sky_cmp
+        Optional sky component to include in the output file name, e.g. "diffuse".
+    chunk_size
+        The number of integrations per chunk.
+    lst_wrap
+        Where to perform the wrap in LST. Default is lowest LST in data.
+    clobber
+        If set, rechunk and overwrite existing files. Otherwise, skip the chunk if it
+        already exists.
+    ignore_missing_channels
+        If set, merely warn if there are no files for a particular channel. Otherwise, raise
+        an error.
+    assume_same_blt_layout
+        Whether to assume each file has the same layout of baselines/times. If False,
+        the script will check that all files have the same blt layout and ordering. If True,
+        the script will skip this check and just assume they are the same.
+    is_rectangular
+        Whether the blts in the files are rectangular. If None, will try to infer from
+        the first file. If True, will assume they are rectangular. If False, will assume
+        they are not rectangular. Note that this script only works for rectangular files, so
+        if this is False, the script will raise an error.
+    max_mem
+        Maximum memory to use in MB. The script will try to chunk the frequencies such that
+        it does not exceed this memory usage. Note that this is just an estimate, and actual
+        memory usage may vary. Setting this too low may result in very long run times, while
+        setting it too high may result in out of memory errors. Default is 1e9 MB (1 TB).
+    nthreads
+        Number of threads to use for reading and writing data. If None, will use all available
+        threads. Note that using more threads may speed up the process, but also may increase
+        memory usage and contention, so use with caution.
+    max_freq_chunk_size
+        Maximum number of frequencies to read at once. Setting --max-mem will try autodetect
+        optimal setting.
+    remove_cross_pols
+        Whether to remove cross-pols from the data. If True, only XX and YY will be kept. If False,
+        all polarizations will be kept.
+    """
     # Check that the read/write directories actually exist with proper permissions.
-    base_dir = Path(args.base_dir)
     if not base_dir.exists():
-        raise FileNotFoundError(
-            f"The provided base directory '{args.base_dir}' does not exist."
-        )
+        raise FileNotFoundError(f"The provided base directory '{base_dir}' does not exist.")
 
-    save_dir = Path(args.save_dir)
     if not save_dir.exists():
         raise FileNotFoundError("The provided save directory does not exist.")
 
@@ -583,32 +561,29 @@ if __name__ == "__main__":
         )
 
     # Build the save file prototype.
-    if args.sky_cmp:
-        prototype = "zen.LST.{lst:.7f}." + f"{args.sky_cmp}.uvh5"
-    else:
-        prototype = "zen.LST.{lst:.7f}.uvh5"
+    prototype = "zen.LST.{lst:.7f}." + (f"{sky_cmp}.uvh5" if sky_cmp else "uvh5")
 
     channels = reduce(
-        operator.iadd,
-        (list(range(*tuple(map(int, ch.split("~"))))) for ch in args.channels),
-        []
+        operator.iadd, (list(range(*tuple(map(int, ch.split("~"))))) for ch in channels), []
     )
 
-    run_with_profiling(
-        chunk_files,
-        args,
+    chunk_files(
         prototype=prototype,
         channels=channels,
-        lst_wrap=args.lst_wrap,
-        n_times_per_file=args.chunk_size,
+        lst_wrap=lst_wrap,
+        n_times_per_file=chunk_size,
         save_dir=save_dir,
         base_dir=base_dir,
-        r_prototype=args.r_prototype,
-        ignore_missing_channels=args.ignore_missing_channels,
-        assume_blt_layout=args.assume_same_blt_layout,
-        is_rectangular=args.is_rectangular,
-        max_mem_mb=args.max_mem,
-        nthreads=args.nthreads,
-        max_freq_chunk_size=args.max_freq_chunk_size,
-        remove_cross_pols=args.remove_cross_pols,
+        r_prototype=r_prototype,
+        ignore_missing_channels=ignore_missing_channels,
+        assume_blt_layout=assume_same_blt_layout,
+        is_rectangular=is_rectangular,
+        max_mem_mb=max_mem,
+        nthreads=nthreads,
+        max_freq_chunk_size=max_freq_chunk_size,
+        remove_cross_pols=remove_cross_pols,
+        clobber=clobber,
     )
+
+
+click_app = typer.main.get_command(app)
