@@ -7,6 +7,7 @@ smaller). Note that the input files may be partial in frequency *and* time.
 Output files have the following prototype:
     zen.LST.{lst:.7f}[.{sky_cmp}].uvh5
 """
+
 import argparse
 import logging
 import os
@@ -105,9 +106,7 @@ def get_file_time_slices(
         i += 1
 
     for i, meta in enumerate(meta_list):
-        if meta.lsts[0] > (lst_wrap + dlst):
-            continue
-        elif meta.lsts[-1] < lst_wrap:
+        if meta.lsts[0] > (lst_wrap + dlst) or meta.lsts[-1] < lst_wrap:
             continue
         else:
             time_index = np.argwhere(meta.lsts >= lst_wrap).flatten()[0]
@@ -241,8 +240,8 @@ def chunk_files(
         try:
             freqs.append(meta.freq_array)
         except OSError as e:
-            raise IOError(f"{str(e)} in file {meta.path}") from e
-        
+            raise OSError(f"{e!s} in file {meta.path}") from e
+
     freqs = np.concatenate(freqs)
 
     # Get the times we're gonna use.
@@ -316,8 +315,8 @@ def chunk_files(
         f"Going to use {nfreq_chunks} frequency chunks of {nfreqs} frequencies each."
     )
     logger.info(
-        f"This is estimated to use {mem_per_freq*nfreqs/1024**2:.2f} MB "
-        f"of memory (of the {mem_left/1024**2} MB left)."
+        f"This is estimated to use {mem_per_freq * nfreqs / 1024**2:.2f} MB "
+        f"of memory (of the {mem_left / 1024**2} MB left)."
     )
     logger.info("")
 
@@ -376,7 +375,7 @@ def chunk_files(
 
             for freq_chunk in range(nfreq_chunks):
                 logger.info(
-                    f"Obtaining frequency chunk {freq_chunk+1}/{nfreq_chunks}..."
+                    f"Obtaining frequency chunk {freq_chunk + 1}/{nfreq_chunks}..."
                 )
                 freq_slice = slice(
                     freq_chunk * nfreqs, min((freq_chunk + 1) * nfreqs, uvd.Nfreqs)

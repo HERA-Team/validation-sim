@@ -1,21 +1,29 @@
+from pathlib import Path
+
+import typer
+
+app = typer.Typer()
+
+
 def print_important_lines(fname):
-    with open(fname, 'r') as fl:
+    with open(fname) as fl:
         important = [
-            'Total time:',
-            'beams._evaluate_beam(',
-            'nufft3d3(',
-            'nufft2d3(',
-            'ModelData.from_config(',
-            'write_uvh5(',
+            "Total time:",
+            "beams._evaluate_beam(",
+            "nufft3d3(",
+            "nufft2d3(",
+            "ModelData.from_config(",
+            "write_uvh5(",
         ]
-        
+
         for line in fl:
             if any(imp in line for imp in important):
-                print(line, end='')
+                print(line, end="")
+
 
 def get_peak_mem(logfile):
     mem = 0
-    with open(logfile, 'r') as fl:
+    with open(logfile) as fl:
         for line in fl:
             if "Memory usage" in line:
                 _m = float(line.split(": ")[1].split(" G")[0].strip())
@@ -23,9 +31,9 @@ def get_peak_mem(logfile):
                     mem = _m
     return mem
 
-if __name__ == '__main__':
-    from pathlib import Path
 
+@app.command()
+def main():
     d = Path("profiling")
     allfiles = sorted(d.glob("*-fftvis-*"))
 
@@ -38,12 +46,15 @@ if __name__ == '__main__':
         else:
             logfile = sorted(logdir.glob("fch0001-ch000_*.out"))[-1]
             peakmem = get_peak_mem(logfile)
-        
+
         label = f"SKY={skymod}, NTIMES={nt[2:]}, LAYOUT={layout}"
-        
+
         print(label)
-        print("-"*len(label))
+        print("-" * len(label))
         print("Peak Memory: ", peakmem, "GB")
         print_important_lines(fl)
         print()
         print()
+
+
+typer_click_app = typer.main.get_command(app)

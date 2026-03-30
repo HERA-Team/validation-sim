@@ -90,12 +90,12 @@ class opts:
     ideal_layout = click.option(
         "--ideal-layout/--not-ideal-layout",
         default=True,
-        help="Whether to use an idealized layout that has perfect redundancy"
+        help="Whether to use an idealized layout that has perfect redundancy",
     )
     redundant = click.option(
         "--redundant/--not-redundant",
         default=False,
-        help="whether to use only redundant baselines in the simulation (not just in writing file)"
+        help="whether to use only redundant baselines in the simulation (not just in writing file)",
     )
     channels = click.option(
         "-fch",
@@ -190,16 +190,19 @@ class opts:
         "--profile/--no-profile", default=False, help="Run line-profiling"
     )
     profile_timer_unit = click.option(
-        "--profile-timer-unit", default=1e-2, help="Timer unit (in sec) for profiling", type=float
+        "--profile-timer-unit",
+        default=1e-2,
+        help="Timer unit (in sec) for profiling",
+        type=float,
     )
     dry_run = click.option(
         "-d", "--dry-run", is_flag=True, help="Pass the flag to hera-sim-vis.py"
     )
     prefix = click.option(
-        "--prefix", default="", help='prefix to put in the directory name'
+        "--prefix", default="", help="prefix to put in the directory name"
     )
     phase_center_name = click.option(
-        "--phase-center-name", default="zenith", help='name for the phase center'
+        "--phase-center-name", default="zenith", help="name for the phase center"
     )
 
     @classmethod
@@ -229,9 +232,7 @@ def _get_sbatch_program(gpu: bool, slurm_override=None):
 source ~/.bashrc
 source {conda_path}/bin/activate
 conda activate {environment_name}
-""".format_map(
-        conda_params
-    )
+""".format_map(conda_params)
 
     module = "\n".join([f"module load {md}" for md in module_params])
 

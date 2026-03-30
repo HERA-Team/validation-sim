@@ -1,0 +1,111 @@
+[build-system]
+requires = ["uv_build>=0.11.2,<0.12"]
+build-backend = "uv_build"
+
+[project]
+name = "validation-sim"
+version = "0.1.0"
+description = "Machinery for running and managing validation simulations for HERA"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "astropy==6.1.4",
+    "astropy-healpix==1.0.3",
+    "click>=8.3.1",
+    "fftvis==1.0.0",
+    "finufft==2.2.0",
+    "hera-filters==0.1.5",
+    "hera-qm==2.2.0",
+    "jupyter>=1.1.1",
+    "line-profiler>=5.0.2",
+    "matplotlib>=3.10.8",
+    "matvis==1.3.2",
+    "numpy==2.0.2",
+    "parse>=1.21.1",
+    "rich>=14.3.3",
+    "uvtools>=0.2.0",
+]
+
+[project.scripts]
+vsim = "validation_sim.cli:cli"
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+extend-select = [
+  "UP",   # pyupgrade
+  "E",    # pycodestyle
+  "W",    # pycodestyle warning
+  "F",    # pyflakes
+  "C90",  # mccabe complexity
+  "I",    # isort
+  "N",    # pep8-naming
+  "D",    # docstyle
+  # "ANN"   # type annotations
+  "B",    # bugbear
+  "A",    # builtins
+  "C4",   # comprehensions
+  "DTZ",  # datetime
+  "FA",   # future annotations
+  "PIE",  # flake8-pie
+  "T",    # print statements
+  "PT",   # pytest-style
+  "Q",    # quotes
+  "SIM",  # simplify
+  "PTH",  # use Pathlib
+  "ERA",  # kill commented code
+  "NPY",  # numpy-specific rules
+  "PERF", # performance
+  # "FURB", # refurb
+  "RUF",  # ruff-specific rules
+]
+
+ignore = [
+    "D103",    # missing docstring in public function
+    "PTH123",  # use of os.path -- we want to use pathlib, but this is a big refactor that we don't want to do right now.
+    "NPY002",  # use numpy random.Generator. Do this eventually, but not right now.
+]
+# ignore = [
+#     "DTZ007",   # use %z in strptime
+#     "DTZ005",
+#     "E203",
+#     "E266",
+#     "E501",
+#     "F403",
+#     #"F401",
+#     "E231",
+#     # Naming upper/lowercase -- too hard right now.
+#     "N803",
+#     # Naming upper/lowercase -- too hard right now.
+#     "N806",
+#     # Naming upper/lowercase -- too hard right now.
+#     "N802",
+#     # Naming mixed case
+#     "N815",
+#     # Docstring in imperative mood. This should *not* be the case for @property's, but can't ignore them atm.
+# #    "D401",
+#     # Module shadowing a builtin
+#     "A005",
+#     "RUF009",
+#     "B008",
+# ]
+
+
+[tool.ruff.lint.pydocstyle]
+convention = 'numpy'
+property-decorators = [
+    "property",
+    "functools.cached_property",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 20
+
+[dependency-groups]
+dev = [
+    "prek>=0.3.8",
+    "ruff>=0.15.8",
+]
+

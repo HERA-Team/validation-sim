@@ -3,16 +3,16 @@
 import logging
 from os import environ
 from pathlib import Path
-from parse import parse
 
 import numpy as np
 import yaml
+from parse import parse
 
 logger = logging.getLogger(__name__)
 
 # These paths and variables define some of the default directories and shared
 # config files for H4C validation simulations
-REPODIR = Path(__file__).parent.parent.absolute()
+REPODIR = Path()  # must run in the project dir
 SKYDIR = REPODIR / "sky_models"
 RAWSKYDIR = SKYDIR / "raw"
 CFGDIR = REPODIR / "config_files"
@@ -26,38 +26,51 @@ BEAMDIR = REPODIR / "beams"
 DIRFMT = "{sky_model}/{prefix}/nt17280-{chunks:05d}chunks-{layout}-{redundant}"
 FLFMT = "fch{fch:04d}_chunk{ch:05d}"
 
-def get_direc(sky_model:str, chunks: int, layout: str, redundant: bool, prefix: str = 'default'):
+
+def get_direc(
+    sky_model: str, chunks: int, layout: str, redundant: bool, prefix: str = "default"
+):
     return Path(
         DIRFMT.format(
-        sky_model=sky_model, prefix=prefix, chunks=chunks, layout=layout,
-        redundant="red" if redundant else 'nonred'
-    ))
-    
-def get_file(chunk: int, channel: int, with_dir: bool = True, ext: str = None, **kw):
+            sky_model=sky_model,
+            prefix=prefix,
+            chunks=chunks,
+            layout=layout,
+            redundant="red" if redundant else "nonred",
+        )
+    )
+
+
+def get_file(
+    chunk: int, channel: int, with_dir: bool = True, ext: str | None = None, **kw
+):
     stem = FLFMT.format(fch=channel, ch=chunk)
 
     fl = get_direc(**kw) / stem if with_dir else Path(stem)
     if ext:
         fl = fl.with_suffix(ext)
     return fl
-    
+
+
 def parse_fname(fname):
     return parse(FLFMT, fname).named
 
+
 def parse_direc(direc: Path):
     parents = direc.parents
-    if len(parents)>2:
+    if len(parents) > 2:
         name = str(direc.relative_to(parents[2]))
     else:
         name = str(direc.relative_to(parents[1]))
     return parse(DIRFMT, name).named
 
+
 def parse_path(path: Path, only_model: bool = False):
     path = Path(path)
-    
+
     if not path.exists():
         raise ValueError(f"Path {path} does not exist.")
-    
+
     if path.is_file():
         if only_model:
             out = parse_direc(path.parent)
@@ -65,10 +78,11 @@ def parse_path(path: Path, only_model: bool = False):
             out = parse_fname(path.stem) | parse_direc(path.parent)
     else:
         out = parse_direc(path)
-    
+
     if not out:
         raise ValueError(f"path {path} did not adhere to any specifications")
-    
+
+
 COMPRESS_FMT = "ch{chunks}_{layout_file}.npy"
 
 HPC = environ.get("VALIDATION_SYSTEM_NAME")
@@ -118,7 +132,9 @@ VALIDATION_SIM_START_TIME = 2458208.916228965
 HERA_LOC = (-30.72152612068957, 21.428303826863015, 1051.6900000218302)
 
 
-def make_hera_layout(name: str, ants: np.ndarray | None = None, ideal: bool = True) -> Path:
+def make_hera_layout(
+    name: str, ants: np.ndarray | None = None, ideal: bool = True
+) -> Path:
     """Create a HERA layout."""
     if ants is None:
         ants = ANTS_DICT[name.upper()]
@@ -127,7 +143,9 @@ def make_hera_layout(name: str, ants: np.ndarray | None = None, ideal: bool = Tr
     if not direc.exists():
         direc.mkdir()
 
-    full_layout = np.genfromtxt(IDEAL_HERA_LAYOUT if ideal else FULL_HERA_LAYOUT, skip_header=1)
+    full_layout = np.genfromtxt(
+        IDEAL_HERA_LAYOUT if ideal else FULL_HERA_LAYOUT, skip_header=1
+    )
 
     with open(direc / f"{name}.txt", "w") as fl:
         fl.write("Name    Number  BeamID  E       N       U\n")

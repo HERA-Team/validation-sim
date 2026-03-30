@@ -1,4 +1,5 @@
 """Utilities for creating sky models."""
+
 import logging
 from functools import cache, cached_property
 
@@ -72,9 +73,7 @@ def dnds_franzen(s, a=None, norm=False):
         return s**-2.5 * out
 
 
-def make_grf_eor_model(
-    model_file: str, channels: list[int], label: str = ""
-):
+def make_grf_eor_model(model_file: str, channels: list[int], label: str = ""):
     """Make a GRF EoR SkyModel.
 
     The model file is here assumed to contain Nfreqs healpix maps. The format of the
@@ -84,14 +83,14 @@ def make_grf_eor_model(
     model_dir = utils.SKYDIR / "eor"
 
     with h5py.File(model_dir / model_file, "r") as fl:
-        shape =  fl['healpix_maps'].shape
-        nside = int(np.sqrt(shape[1]/12))
-        
-    freqs = H4C_FREQS.copy()
-#        freqs = fl["frequencies_mhz"][:] * 1e6 << units.Hz  # units Hz
+        shape = fl["healpix_maps"].shape
+        nside = int(np.sqrt(shape[1] / 12))
 
-        # HEALPix array -- dimension (nfreqs, npix) -- unit Jy/sr
-        # We must read in the whole thing to set the monopole.
+    freqs = H4C_FREQS.copy()
+    #        freqs = fl["frequencies_mhz"][:] * 1e6 << units.Hz  # units Hz
+
+    # HEALPix array -- dimension (nfreqs, npix) -- unit Jy/sr
+    # We must read in the whole thing to set the monopole.
 
     npix = hp.nside2npix(nside)
 
@@ -117,8 +116,7 @@ def make_grf_eor_model(
 
     for fch in channels:
         logger.info(f"Constructing channel {fch}")
-        with h5py.File(model_dir / model_file, 'r') as fl:
-            
+        with h5py.File(model_dir / model_file, "r") as fl:
             hmaps = fl["healpix_maps"][fch]
 
         hmaps <<= units.Jy / units.sr
@@ -285,8 +283,11 @@ def make_gleam_like_model(
 
     """
     if mean_spectral_index > 0:
-        raise ValueError("Spectral index should be negative (i.e. it is not made negative by pyradiosky")
-        
+        raise ValueError(
+            "Spectral index should be negative (i.e. it is not made negative "
+            "by pyradiosky)"
+        )
+
     np.random.seed(seed)
     source_counts = (
         franzen_base()
@@ -314,7 +315,6 @@ def make_gleam_like_model(
     # Reference frequency is 154 MHz
     ref_freq = 154e6 * np.ones(nsources) * units.Hz
 
-        
     gl_model_params = {
         "name": names,
         "ra": ra,
@@ -573,12 +573,14 @@ def make_gsm_model(channels: list[int], nside: int = 256, label="") -> SkyModel:
         write_sky(gsm_model, f"gsm_nside{nside}{label}", fch)
 
 
-def make_diffuse_model(channels: int, nside: int = 256, with_confusion=True, label="") -> SkyModel:
+def make_diffuse_model(
+    channels: int, nside: int = 256, with_confusion=True, label=""
+) -> SkyModel:
     """Make a diffuse SkyModel (GSM + confusion at a given frequency channel."""
     freqs = H4C_FREQS[channels]
     gsm = GlobalSkyModel(freq_unit=freqs[0].unit)
 
-    for fch, freq in zip(channels, freqs):
+    for fch, freq in zip(channels, freqs, strict=True):
         gsm_map = make_gsm_map(freq, nside=nside, smooth=True, gsm=gsm)
         confusion_map = make_confusion_map(freq, nside=nside) if with_confusion else 0
         diffuse_map = gsm_map + confusion_map
@@ -586,5 +588,3 @@ def make_diffuse_model(channels: int, nside: int = 256, with_confusion=True, lab
             diffuse_map, freq, nside, inframe="galactic", outframe="icrs", to_point=True
         )
         write_sky(diffuse_model, f"diffuse_nside{nside}{label}", fch)
-
-
