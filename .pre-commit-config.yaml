@@ -1,4 +1,4 @@
-files: "^src/|^notebooks/"
+exclude: "^beams|^config_files|^hpc-configs|^profiles|^profiling|^projects|^simulator-specs"
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
