@@ -1,7 +1,11 @@
+from pathlib import Path
+import sys
+sys.path.insert(0, Path(__file__).absolute().parent.parent)
+
+print(sys.path)
 from rich.console import Console
 from rich.rule import Rule
 from rich.panel import Panel
-from pathlib import Path
 import typer
 from core import utils
 import os

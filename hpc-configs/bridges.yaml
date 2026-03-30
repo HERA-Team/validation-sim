@@ -17,7 +17,7 @@ slurm:
   cpu:
     partition: "RM-shared"  # Name of partition
     nodes: 1  # Number of nodes
-    ntasks: 1  # Number of tasks
+    ntasks-per-node: 1  # Number of tasks
     time: "0-00:60:00"  # slurm-aware time string format
   gpu:
     partition: "GPU-shared"  # Name of partition

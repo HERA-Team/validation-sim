@@ -48,7 +48,7 @@ def run_validation_sim(
 ):
     """Run a full validation sim on SLURM compute."""
     sgpu = "gpu" if gpu else "cpu"
-    simulator_config = utils.REPODIR / f"{simulator}-{sgpu}.yaml"
+    simulator_config = utils.REPODIR / 'simulator-specs' / f"{simulator}-{sgpu}.yaml"
 
     assert (
         simulator_config.exists()

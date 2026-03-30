@@ -284,7 +284,7 @@ def make_gleam_like_model(
         A SkyModel representing the GLEAM-like sources.
 
     """
-    if spectral_index > 0:
+    if mean_spectral_index > 0:
         raise ValueError("Spectral index should be negative (i.e. it is not made negative by pyradiosky")
         
     np.random.seed(seed)
