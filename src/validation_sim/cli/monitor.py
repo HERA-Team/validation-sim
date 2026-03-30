@@ -33,7 +33,7 @@ def main(
     logdir = utils.LOGDIR / "vis"
     outdir = utils.OUTDIR
 
-    def globify_options(options, fmt: str="", allow_omission: bool=False):
+    def globify_options(options, fmt: str = "", allow_omission: bool = False):
         if options:
             if len(options) == 1:
                 return f"{options[0]:{fmt}}"
@@ -90,9 +90,7 @@ def main(
         files = []
         for channel in channels:
             for chunk in chunks_list:
-                fname = utils.get_file(
-                    chunk=chunk, channel=channel, with_dir=False
-                ).name
+                fname = utils.get_file(chunk=chunk, channel=channel, with_dir=False).name
                 # Get the *latest* logfile
                 logfl = sorted((logdir / mdl).glob(f"{fname}-*.out"))
                 logfl = logfl[-1] if len(logfl) > 0 else None
@@ -106,12 +104,8 @@ def main(
         npassed = len([x for x in files if x[2] is not None and x[3] is not None])
         cprint(f"[green]{npassed} files are completed properly.")
 
-        if run_without_log := [
-            x[3] for x in files if x[2] is None and x[3] is not None
-        ]:
-            cprint(
-                f"[orange]{len(run_without_log)} files are complete, but have no log:"
-            )
+        if run_without_log := [x[3] for x in files if x[2] is None and x[3] is not None]:
+            cprint(f"[orange]{len(run_without_log)} files are complete, but have no log:")
             for x in run_without_log:
                 cprint(f"\t{x.name}")
             cprint()
@@ -127,16 +121,14 @@ def main(
                 f"[red]{len(weird_size)} files have odd sizes: (median {mean_size / 1024**3:.3f} GB)"
             )
             for outfl, flsize in weird_size:
-                cprint(
-                    f"\t{outfl.relative_to(Path(__file__).parent)}: {flsize / 1024**3:.3f} GB"
-                )
+                cprint(f"\t{outfl.relative_to(utils.REPODIR)}: {flsize / 1024**3:.3f} GB")
 
         if run_with_error := [x[2] for x in files if x[2] is not None and x[3] is None]:
             cprint(f"[red]{len(run_with_error)} files errored:")
             run_with_error = run_with_error[:max_prints]
 
             for x in run_with_error:
-                cprint(f"\t{x.relative_to(Path(__file__).parent)}")
+                cprint(f"\t{x.relative_to(utils.REPODIR)}")
             cprint()
 
             with open(run_with_error[-1]) as fl:
