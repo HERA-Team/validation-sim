@@ -7,10 +7,10 @@ from importlib.metadata import version
 from pathlib import Path
 
 import yaml
-from core.obsparams import make_hera_obsparam
 
 from . import utils
 from ._cli_utils import _get_sbatch_program
+from .obsparams import make_hera_obsparam
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +104,7 @@ def run_validation_sim(
     slurm_override = (
         *slurm_override,
         ("job-name", "{jobname}"),
-        ("output", "{logdir}/{jobname}-%J.out")
+        ("output", "{logdir}/{jobname}-%J.out"),
     )
 
     if "time" not in [x[0] for x in slurm_override]:
@@ -189,10 +189,7 @@ def run_validation_sim(
                 prof_funcs = ",".join(prof_funcs)
                 profilestr += f' --profile-funcs "{prof_funcs}"'
 
-            cmd = (
-                f"{trace}hera-sim-vis.py {sim_options} {profilestr} {obsp} "
-                f"{simulator_config}"
-            )
+            cmd = f"{trace}hera-sim-vis.py {sim_options} {profilestr} {obsp} {simulator_config}"
 
             if utils.HPC_CONFIG["slurm"]:
                 # Write job script and submit

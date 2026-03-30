@@ -290,7 +290,7 @@ def cornerturn(
     sbatch = _cli._get_sbatch_program(gpu=False, slurm_override=slurm_override)
 
     cmd = f"""
-    time python core/rechunk-fast.py \
+    time vsim rechunk-fast \
     --r-prototype "fch{{channel:04d}}_chunk{time_chunk:05d}.uvh5" \
     --chunk-size {new_chunk_size} \
     --channels {channels} \
