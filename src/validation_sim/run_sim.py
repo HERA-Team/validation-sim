@@ -79,7 +79,7 @@ def run_validation_sim(
     if not layout_file.exists():
         raise ValueError(f"Error in creating layout file: {layout_file}")
     else:
-        print(f"Created layout file at {layout_file}")
+        pass
 
     if not do_time_chunks:
         do_time_chunks = list(range(n_time_chunks))
@@ -101,13 +101,14 @@ def run_validation_sim(
     logdir.mkdir(parents=True, exist_ok=True)
 
     # Note that click default `slurm_overrride` to (), and we want it to be "2D" tuple
-    slurm_override = slurm_override + (
+    slurm_override = (
+        *slurm_override,
         ("job-name", "{jobname}"),
-        ("output", "{logdir}/{jobname}-%J.out"),
+        ("output", "{logdir}/{jobname}-%J.out")
     )
 
     if "time" not in [x[0] for x in slurm_override]:
-        slurm_override = slurm_override + (("time", f"0-00:{time_est}:00"),)
+        slurm_override = (*slurm_override, ("time", f"0-00:{time_est}:00"))
 
     # Make the SBATCH script minus hera-sim-vis.py command
     program = _get_sbatch_program(gpu, slurm_override)
@@ -124,7 +125,10 @@ def run_validation_sim(
         utils.COMPRESSDIR.mkdir(parents=True)
 
     # Option for hera-sim-vis.py. Let's just keep this fixed.
-    sim_options = f"--normalize_beams --fix_autos --log-level {log_level} --phase-center-name {phase_center_name}"
+    sim_options = (
+        f"--normalize_beams --fix_autos --log-level {log_level} "
+        f"--phase-center-name {phase_center_name}"
+    )
 
     if not redundant:
         sim_options += f" --compress {compress_cache}"
@@ -157,10 +161,12 @@ def run_validation_sim(
                         f"-o profiles/{proflabel} "
                     )
                 else:
-                    trace = ""  # f"scalene --profile-all --profile-only fftvis,pyuvdata,hera_sim,matvis --no-browser --html --outfile profiling/{proflabel}.scalene.html "
-                profilestr = f"--profile --profile-timer-unit {profile_timer_unit} --profile-output {profout}.profile.txt"
+                    trace = ""
+                profilestr = (
+                    f"--profile --profile-timer-unit {profile_timer_unit} "
+                    f"--profile-output {profout}.profile.txt"
+                )
                 prof_funcs = [
-                    #                    "hera_sim.visibilities.simulators:VisibilitySimulation",
                     "hera_sim.visibilities.simulators:ModelData.from_config",
                     "pyuvsim.simsetup:initialize_catalog_from_params",
                     "pyradiosky:SkyModel.from_file",

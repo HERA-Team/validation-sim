@@ -87,7 +87,6 @@ def make_grf_eor_model(model_file: str, channels: list[int], label: str = ""):
         nside = int(np.sqrt(shape[1] / 12))
 
     freqs = H4C_FREQS.copy()
-    #        freqs = fl["frequencies_mhz"][:] * 1e6 << units.Hz  # units Hz
 
     # HEALPix array -- dimension (nfreqs, npix) -- unit Jy/sr
     # We must read in the whole thing to set the monopole.
@@ -271,7 +270,8 @@ def make_gleam_like_model(
     mean_spectral_index: float, optional
         The mean spectral index of the sources. The default is -0.8.
     sigma_spectral_index: float, optional
-        The standard deviation of the spectral index of the sources. The default is 0.05.
+        The standard deviation of the spectral index of the sources.
+        The default is 0.05.
     nside: int, optional
         The healpix nside parameter to use, to choose the approximate number of
         sources. Fainter sources are not simulated. The default is 256.
@@ -565,7 +565,7 @@ def make_gsm_model(channels: list[int], nside: int = 256, label="") -> SkyModel:
     freqs = H4C_FREQS[channels]
     gsm = GlobalSkyModel(freq_unit=freqs[0].unit)
 
-    for fch, freq in zip(channels, freqs):
+    for fch, freq in zip(channels, freqs, strict=False):
         gsm_map = make_gsm_map(freq, nside=nside, smooth=True, gsm=gsm)
         gsm_model = make_healpix_type_sky_model(
             gsm_map, freq, nside, inframe="galactic", outframe="icrs", to_point=True

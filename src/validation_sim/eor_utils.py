@@ -22,11 +22,11 @@ def get_pspec_from_covariance_file(
     with h5py.File(full_file_path, "r") as h5f:
         iparams = h5f["input_parameters"]
         cosmology_name = iparams["cosmology_name"][()].decode()
-        cosmo = getattr(cosmology, cosmology_name)
+        getattr(cosmology, cosmology_name)
 
-        nu_axis = iparams["nu_axis"][()]
-        del_nu = iparams["del_nu"][()]
-        ell_axis = iparams["ell_axis"][()]
+        iparams["nu_axis"][()]
+        iparams["del_nu"][()]
+        iparams["ell_axis"][()]
 
         a = iparams["a"][()]
         k0 = iparams["k0"][()]
@@ -136,7 +136,7 @@ def expected_power_spectrum(
     littleh: bool = True,
     nterms: int = 20,
 ) -> np.ndarray:
-    ks, z = get_ks(cosmo, uvp, spw)
+    ks, _z = get_ks(cosmo, uvp, spw)
 
     tps = partial(
         tapered_power_spectrum,

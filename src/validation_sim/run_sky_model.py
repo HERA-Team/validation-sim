@@ -29,12 +29,10 @@ def run_make_sky_model(
     # variables have to be accessed in the loop, so we will be instead override it to
     # a Python string formatting pattern and format it in the loop.
     # Note that click default `slurm_overrride` to (), and we want it to be "2D" tuple
-    slurm_override = slurm_override + (
+    slurm_override = (
+        *slurm_override,
         ("job-name", "{sky_model}-fch{fch:04d}" if split_freqs else sky_model),
-        (
-            "output",
-            "{logdir}/fch{fch:04d}_%J.out" if split_freqs else "{logdir}/%J.out",
-        ),
+        ("output", "{logdir}/fch{fch:04d}_%J.out" if split_freqs else "{logdir}/%J.out")
     )
 
     # Precedence for sbatch walltime:
@@ -46,7 +44,7 @@ def run_make_sky_model(
         "time"
     ) or utils.HPC_CONFIG.get("slurm", {}).get("cpu", {}).get("time")
     if not have_cli_time and not yaml_time:
-        slurm_override = slurm_override + (("time", "0-00:15:00"),)
+        slurm_override = (*slurm_override, ("time", "0-00:15:00"))
 
     # Make the SBATCH script minus hera-sim-vis.py command
     program = _get_sbatch_program(gpu=False, slurm_override=slurm_override)
@@ -65,7 +63,10 @@ def run_make_sky_model(
                 logger.warning(f"File {outfile} exists, skipping")
                 continue
 
-            cmd = f"time python vsim.py sky-model {sky_model} --local --nside {nside} --freq-range {fch} {fch + 1} --label '{label}'"
+            cmd = (
+                f"time python vsim.py sky-model {sky_model} --local --nside {nside} "
+                f"--freq-range {fch} {fch + 1} --label '{label}'"
+            )
 
             if utils.HPC_CONFIG["slurm"]:
                 # Write job script and submit
@@ -101,7 +102,10 @@ def run_make_sky_model(
             (f"--channels {g[0]} " if len(g) == 1 else f"--channels {g[0]}~{g[-1] + 1}")
             for g in groups
         )
-        cmd = f"time python vsim.py sky-model {sky_model} --local --nside {nside} --label '{label}' {chan_opt}"
+        cmd = (
+            f"time python vsim.py sky-model {sky_model} --local --nside {nside} "
+            f"--label '{label}' {chan_opt}"
+        )
 
         if utils.HPC_CONFIG["slurm"]:
             # Write job script and submit

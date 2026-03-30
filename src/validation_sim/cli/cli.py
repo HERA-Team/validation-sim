@@ -261,8 +261,6 @@ def cornerturn(
     remove_cross_pols = "--remove-cross-pols" if remove_cross_pols else ""
 
     if channels is None:
-        print(simdir)
-        print(simdir.glob("*"))
         allfiles = sorted(simdir.glob(f"fch????_chunk{time_chunk:05d}.uvh5"))
         maxchan = int(allfiles[-1].name.split("fch")[1][:4])
         if len(allfiles) != maxchan + 1:
@@ -279,15 +277,7 @@ def cornerturn(
     else:
         estimated_time = f"{int(estimated_time):02d}:{estimated_minutes:02d}:00"
 
-    slurm_override = slurm_override + (
-        ("job-name", f"{sky_model}-ct"),
-        ("output", f"{log_dir}/%J.out"),
-        ("nodes", "1"),
-        ("ntasks", "1"),
-        ("cpus-per-task", "16"),
-        ("mem", "31GB"),
-        ("time", estimated_time),
-    )
+    slurm_override = (*slurm_override, ("job-name", f"{sky_model}-ct"), ("output", f"{log_dir}/%J.out"), ("nodes", "1"), ("ntasks", "1"), ("cpus-per-task", "16"), ("mem", "31GB"), ("time", estimated_time))
 
     sbatch = _cli._get_sbatch_program(gpu=False, slurm_override=slurm_override)
 

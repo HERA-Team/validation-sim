@@ -87,12 +87,10 @@ def make_hera_obsparam(
     if NTIMES % chunks != 0:
         raise ValueError(f"Please choose chunks to divide NTIMES {NTIMES} cleanly")
 
-    print("chunks: ", chunks)
     if do_chunks is None:
         do_chunks = list(range(chunks + 1))
     else:
         assert all(x < chunks for x in do_chunks)
-    print(do_chunks)
     Ntimes_per_chunk = NTIMES // chunks
 
     if isinstance(layout, str):
@@ -149,12 +147,10 @@ def make_hera_obsparam(
             np.savetxt(redfile, redbls)
         reds = [(int(a), int(b)) for a, b in redbls]
 
-    print(channels, freq_vals, do_chunks)
-    for fch, fv in zip(channels, freq_vals):
+    for fch, fv in zip(channels, freq_vals, strict=False):
         for ch in do_chunks:
             jobname = modeldir / utils.get_file(chunk=ch, channel=fch, with_dir=False)
             obsparams_file = utils.OBSPDIR / jobname
-            print(f"Going to make {obsparams_file}")
             if obsparams_file.exists() and not force:
                 continue
 
@@ -197,6 +193,5 @@ def make_hera_obsparam(
             with open(obsparams_file, "w") as stream:
                 yaml.dump(obsparams, stream, default_flow_style=False, sort_keys=False)
 
-            print(f"Wrote obsparams at {obsparams_file}")
 
     return layout_file

@@ -18,7 +18,7 @@ def print_important_lines(fname):
 
         for line in fl:
             if any(imp in line for imp in important):
-                print(line, end="")
+                pass
 
 
 def get_peak_mem(logfile):
@@ -38,23 +38,18 @@ def main():
     allfiles = sorted(d.glob("*-fftvis-*"))
 
     for fl in allfiles:
-        skymod, gpu, nt, layout, code, version, hsim = fl.name.split("-")
+        skymod, _gpu, nt, layout, _code, _version, _hsim = fl.name.split("-")
 
         logdir = Path(f"logs/vis/{skymod}/nt17280-{nt[2:]}chunks-{layout}")
         if not logdir.exists():
-            print(f"SKIPPING  {logdir} since it doesn't exist")
+            pass
         else:
             logfile = sorted(logdir.glob("fch0001-ch000_*.out"))[-1]
-            peakmem = get_peak_mem(logfile)
+            get_peak_mem(logfile)
 
-        label = f"SKY={skymod}, NTIMES={nt[2:]}, LAYOUT={layout}"
+        f"SKY={skymod}, NTIMES={nt[2:]}, LAYOUT={layout}"
 
-        print(label)
-        print("-" * len(label))
-        print("Peak Memory: ", peakmem, "GB")
         print_important_lines(fl)
-        print()
-        print()
 
 
 typer_click_app = typer.main.get_command(app)

@@ -1,4 +1,6 @@
+import functools
 import logging
+import operator
 
 import click
 import numpy as np
@@ -40,7 +42,7 @@ class IntRangeBuilder(click.IntRange):
 def combine_int_ranges(ctx, param, value) -> list[int]:
     """Combine multiple IntRangerBuilder outputs into one list."""
     # value should be a list of lists of ints
-    return sorted(set(sum(value, start=[])))
+    return sorted(set(functools.reduce(operator.iadd, value, [])))
 
 
 def check_ants(ctx, param, value):
@@ -63,7 +65,7 @@ def parse_channels(channels: list[int], freq_range: tuple[float, float]) -> list
 
     if freq_range:
         mask = np.logical_and(freqs >= freq_range[0], freqs < freq_range[1])
-        channels = [c for c, m in zip(channels, mask) if m]
+        channels = [c for c, m in zip(channels, mask, strict=False) if m]
 
     return channels
 

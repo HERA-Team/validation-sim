@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import numpy as np
@@ -34,12 +33,12 @@ def main(
     logdir = utils.LOGDIR / "vis"
     outdir = utils.OUTDIR
 
-    def globify_options(options, format="", allow_omission=False):
+    def globify_options(options, fmt: str="", allow_omission: bool=False):
         if options:
             if len(options) == 1:
-                return f"{options[0]:{format}}"
+                return f"{options[0]:{fmt}}"
             else:
-                return "(" + "|".join(f"{o:{format}}" for o in options) + ")"
+                return "(" + "|".join(f"{o:{fmt}}" for o in options) + ")"
         else:
             return "**" if allow_omission else "*"
 
@@ -47,7 +46,7 @@ def main(
         channels = list(range(1536))
 
     sky_glob = globify_options(sky_model)
-    nchunks_glob = globify_options(nchunks, format="05d")
+    nchunks_glob = globify_options(nchunks, fmt="05d")
     layout_glob = globify_options(layout)
     prefix_glob = globify_options(prefix, allow_omission=True)
     if show_redundant and show_nonred:
@@ -101,10 +100,7 @@ def main(
                 # Get the only output
                 outfl = sorted((outdir / mdl).glob(f"{fname}.uvh5"))
                 outfl = outfl[0] if outfl else None
-                if outfl is not None:
-                    flsize = os.stat(outfl).st_size
-                else:
-                    flsize = None
+                flsize = outfl.stat().st_size if outfl is not None else None
                 files.append((channel, chunk, logfl, outfl, flsize))
 
         npassed = len([x for x in files if x[2] is not None and x[3] is not None])

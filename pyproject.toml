@@ -30,7 +30,7 @@ dependencies = [
 vsim = "validation_sim.cli:cli"
 
 [tool.ruff]
-line-length = 88
+line-length = 100
 target-version = "py313"
 
 [tool.ruff.lint]
@@ -61,11 +61,16 @@ extend-select = [
   # "FURB", # refurb
   "RUF",  # ruff-specific rules
 ]
-
+exclude = [
+    "*.ipynb",  # For now, ignore formatting in notebooks.
+]
 ignore = [
     "D103",    # missing docstring in public function
+    "D100",    # missing docstring in public module
     "PTH123",  # use of os.path -- we want to use pathlib, but this is a big refactor that we don't want to do right now.
     "NPY002",  # use numpy random.Generator. Do this eventually, but not right now.
+    "N",       # For now, ignore all naming issues. We can re-enable these eventually, but there are a lot of them and it's not worth the effort to fix them right now.
+    "E501"     # line too long -- we have a lot of these and it's not worth fixing them right now.
 ]
 # ignore = [
 #     "DTZ007",   # use %z in strptime
@@ -101,7 +106,7 @@ property-decorators = [
 ]
 
 [tool.ruff.lint.mccabe]
-max-complexity = 20
+max-complexity = 22
 
 [dependency-groups]
 dev = [

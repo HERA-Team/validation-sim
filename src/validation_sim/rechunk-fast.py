@@ -10,9 +10,10 @@ Output files have the following prototype:
 
 import argparse
 import logging
+import operator
 import os
 from collections import Counter
-from functools import partial
+from functools import partial, reduce
 from multiprocessing import Pool, cpu_count, shared_memory
 from pathlib import Path
 
@@ -489,7 +490,6 @@ def write_freq_chunk(
 
 
 if __name__ == "__main__":
-    # set_start_method('forkserver')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "base_dir", type=str, help="Path to directory containing simulation data."
@@ -562,11 +562,6 @@ if __name__ == "__main__":
         action="store_true",
         help="Whether to remove cross-pols from the data.",
     )
-    parser.add_argument(
-        "--conjugate",
-        action="store_true",
-        help="Whether to conjugate the data. THIS IS ONLY FOR FIXING ISSUES WITH EARLY VERSIONS OF VIS_CPU.",
-    )
     args = parse_args(parser)
 
     # Check that the read/write directories actually exist with proper permissions.
@@ -593,9 +588,10 @@ if __name__ == "__main__":
     else:
         prototype = "zen.LST.{lst:.7f}.uvh5"
 
-    channels = sum(
+    channels = reduce(
+        operator.iadd,
         (list(range(*tuple(map(int, ch.split("~"))))) for ch in args.channels),
-        start=[],
+        []
     )
 
     run_with_profiling(
@@ -615,5 +611,4 @@ if __name__ == "__main__":
         nthreads=args.nthreads,
         max_freq_chunk_size=args.max_freq_chunk_size,
         remove_cross_pols=args.remove_cross_pols,
-        conjugate=args.conjugate,
     )
