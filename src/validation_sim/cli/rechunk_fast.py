@@ -259,7 +259,6 @@ def chunk_files(
     # Make a prototype UVData object for the chunked data.
     # this has too many times, and only one frequency. We update that manually.
     uvd = meta.to_uvdata()
-    uvd.use_future_array_shapes()
     uvd.freq_array = freqs
     uvd.Nfreqs = len(freqs)
     uvd.channel_width = np.ones_like(freqs) * (np.diff(freqs)[0])
