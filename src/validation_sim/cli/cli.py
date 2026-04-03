@@ -300,7 +300,6 @@ def cornerturn(
     --nthreads 16 \
     {conjugate} \
     {remove_cross_pols} \
-    --log-level {log_level} \
     {simdir} \
     {outdir} \
     """
