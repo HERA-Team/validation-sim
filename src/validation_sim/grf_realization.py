@@ -5,7 +5,7 @@ This file was originally written by Zac Martinot, and called `make_nside256_real
 We have just updated it to take arguments and put files in the right paths.
 """
 
-from . import utils
+from . import paths
 from .slurm import slurmify
 
 
@@ -18,4 +18,4 @@ def run_compute_grf_realization(
     low_memory: bool = True,
 ):
     lmemstr = "--low-memory" if low_memory else "--no-low-memory"
-    return f"rgf realization --nside {nside} --seed {seed} {lmemstr} --covpath {utils.SKYDIR / 'raw' / 'covariance.h5'} --outpath {utils.SKYDIR / 'raw' / f'eor-grf-nside{nside}.h5'} --overwrite"
+    return f"rgf realization --nside {nside} --seed {seed} {lmemstr} --covpath {paths.RAWSKYDIR / 'covariance.h5'} --outpath {paths.RAWSKYDIR / f'eor-grf-nside{nside}.h5'} --overwrite"

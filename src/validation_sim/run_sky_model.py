@@ -1,7 +1,7 @@
 import logging
 import subprocess
 
-from . import utils
+from . import paths
 from ._cli_utils import _get_sbatch_program
 
 logger = logging.getLogger(__name__)
@@ -20,8 +20,8 @@ def run_make_sky_model(
 ):
     """Run the sky model creation via SLURM."""
     model = f"{sky_model}{nside}"
-    out_dir = utils.SKYDIR / f"{model}"
-    logdir = utils.LOGDIR / f"skymodel/{model}"
+    out_dir = paths.SKYDIR / f"{model}"
+    logdir = paths.LOGDIR / f"skymodel/{model}"
 
     logdir.mkdir(parents=True, exist_ok=True)
 
@@ -32,7 +32,7 @@ def run_make_sky_model(
     slurm_override = (
         *slurm_override,
         ("job-name", "{sky_model}-fch{fch:04d}" if split_freqs else sky_model),
-        ("output", "{logdir}/fch{fch:04d}_%J.out" if split_freqs else "{logdir}/%J.out")
+        ("output", "{logdir}/fch{fch:04d}_%J.out" if split_freqs else "{logdir}/%J.out"),
     )
 
     # Precedence for sbatch walltime:
@@ -40,16 +40,16 @@ def run_make_sky_model(
     # 2) Default : hpc-sonfig/*.yaml
     # 3) Fallback : run_sky_model.py
     have_cli_time = any(k == "time" for k, _ in slurm_override)
-    yaml_time = utils.HPC_CONFIG.get("slurm", {}).get("sky-model", {}).get(
+    yaml_time = paths.HPC_CONFIG.get("slurm", {}).get("sky-model", {}).get(
         "time"
-    ) or utils.HPC_CONFIG.get("slurm", {}).get("cpu", {}).get("time")
+    ) or paths.HPC_CONFIG.get("slurm", {}).get("cpu", {}).get("time")
     if not have_cli_time and not yaml_time:
         slurm_override = (*slurm_override, ("time", "0-00:15:00"))
 
     # Make the SBATCH script minus hera-sim-vis.py command
     program = _get_sbatch_program(gpu=False, slurm_override=slurm_override)
 
-    sbatch_dir = utils.REPODIR / "batch_scripts/skymodel"
+    sbatch_dir = paths.REPODIR / "batch_scripts/skymodel"
     sbatch_dir.mkdir(parents=True, exist_ok=True)
 
     if split_freqs:
@@ -68,7 +68,7 @@ def run_make_sky_model(
                 f"--freq-range {fch} {fch + 1} --label '{label}'"
             )
 
-            if utils.HPC_CONFIG["slurm"]:
+            if paths.HPC_CONFIG["slurm"]:
                 # Write job script and submit
                 sbatch_file = sbatch_dir / f"{sky_model}_fch{fch:04d}.sbatch"
 
@@ -107,7 +107,7 @@ def run_make_sky_model(
             f"--label '{label}' {chan_opt}"
         )
 
-        if utils.HPC_CONFIG["slurm"]:
+        if paths.HPC_CONFIG["slurm"]:
             # Write job script and submit
             sbatch_file = sbatch_dir / f"{sky_model}_allfreqs.sbatch"
 

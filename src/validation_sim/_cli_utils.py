@@ -5,7 +5,7 @@ import operator
 import click
 import numpy as np
 
-from . import utils
+from . import paths
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ def check_ants(ctx, param, value):
 
 def parse_channels(channels: list[int], freq_range: tuple[float, float]) -> list[int]:
     """Combine --channels and --freq-range inputs to get one set of channels."""
-    freqs = utils.FREQS_DICT["H4C"] / 1e6
+    freqs = paths.phase_two_freqs() / 1e6
     if channels:
         freqs = freqs[channels]
 
@@ -76,7 +76,7 @@ class opts:
     layout = click.option(
         "--layout",
         default=None,
-        type=click.Choice(list(utils.ANTS_DICT.keys())),
+        type=click.Choice(list(paths.possible_layouts())),
         help="A pre-defined HERA layout to use",
     )
     ants = click.option(
@@ -102,8 +102,8 @@ class opts:
     channels = click.option(
         "-fch",
         "--channels",
-        type=IntRangeBuilder(0, len(utils.FREQS_DICT["H4C"])),
-        default=[(0, len(utils.FREQS_DICT["H4C"]))],
+        type=IntRangeBuilder(0, len(paths.phase_two_freqs())),
+        default=[(0, len(paths.phase_two_freqs()))],
         show_default=True,
         multiple=True,
         help="Frequency channels to include. Specify as ints or 'low~high'",
@@ -123,7 +123,7 @@ class opts:
         default="ptsrc",
         show_default=True,
         type=click.Choice(
-            [d.name for d in utils.SKYDIR.glob("*") if d.name != "raw"],
+            [d.name for d in paths.SKYDIR.glob("*") if d.name != "raw"],
             case_sensitive=True,
         ),
         help="Sky model to simulate",
@@ -139,15 +139,10 @@ class opts:
         default=[],
         type=IntRangeBuilder(min=0),
         multiple=True,
-        help=(
-            "Only run the simulation for these time chunks (useful for "
-            "debugging/exploring)"
-        ),
+        help=("Only run the simulation for these time chunks (useful for debugging/exploring)"),
         callback=combine_int_ranges,
     )
-    gpu = click.option(
-        "--gpu/--cpu", default=False, show_default=True, help="Use gpu or cpu"
-    )
+    gpu = click.option("--gpu/--cpu", default=False, show_default=True, help="Use gpu or cpu")
     slurm_override = click.option(
         "-so",
         "--slurm-override",
@@ -188,21 +183,15 @@ class opts:
         show_default=True,
         help="The interpolation function to use for beam interpolation",
     )
-    profile = click.option(
-        "--profile/--no-profile", default=False, help="Run line-profiling"
-    )
+    profile = click.option("--profile/--no-profile", default=False, help="Run line-profiling")
     profile_timer_unit = click.option(
         "--profile-timer-unit",
         default=1e-2,
         help="Timer unit (in sec) for profiling",
         type=float,
     )
-    dry_run = click.option(
-        "-d", "--dry-run", is_flag=True, help="Pass the flag to hera-sim-vis.py"
-    )
-    prefix = click.option(
-        "--prefix", default="", help="prefix to put in the directory name"
-    )
+    dry_run = click.option("-d", "--dry-run", is_flag=True, help="Pass the flag to hera-sim-vis.py")
+    prefix = click.option("--prefix", default="", help="prefix to put in the directory name")
     phase_center_name = click.option(
         "--phase-center-name", default="zenith", help="name for the phase center"
     )
@@ -219,9 +208,12 @@ class opts:
 
 def _get_sbatch_program(gpu: bool, slurm_override=None):
     """Format an SBATCH program from parts."""
-    conda_params = utils.HPC_CONFIG["conda"]
-    module_params = utils.HPC_CONFIG["module"]
-    slurm_params = utils.HPC_CONFIG["slurm"]["gpu" if gpu else "cpu"]
+    if paths.HPC_CONFIG is None:
+        raise ValueError("HPC_CONFIG is not set. Cannot format SBATCH program.")
+
+    conda_params = paths.HPC_CONFIG["conda"]
+    module_params = paths.HPC_CONFIG["module"]
+    slurm_params = paths.HPC_CONFIG["slurm"]["gpu" if gpu else "cpu"]
 
     if slurm_override is not None:  # Modify slurm options
         for k, v in slurm_override:

@@ -9,7 +9,7 @@ import click
 from rich.logging import RichHandler
 
 from .. import _cli_utils as _cli
-from .. import utils
+from .. import paths
 from .monitor import type_click_app as monitor_app
 
 # TODO: this should be better refactored into a "profiling" sub-group
@@ -243,7 +243,7 @@ def cornerturn(
     log_dir.mkdir(parents=True, exist_ok=True)
 
     if direc is None:
-        simdir = utils.OUTDIR / utils.get_direc(
+        simdir = paths.OUTDIR / paths.get_direc(
             sky_model=sky_model,
             chunks=nchunks_sim,
             layout=layout,
@@ -303,7 +303,7 @@ def cornerturn(
     {simdir} \
     {outdir} \
     """
-    sbatch_dir = utils.REPODIR / "batch_scripts/rechunk"
+    sbatch_dir = paths.REPODIR / "batch_scripts/rechunk"
     sbatch_dir.mkdir(parents=True, exist_ok=True)
 
     sbatch_file = sbatch_dir / f"{sky_model}_ch{time_chunk:03d}_{layout}.sbatch"

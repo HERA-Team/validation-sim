@@ -7,10 +7,10 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-from . import utils
+from . import paths, utils
 
-H4C_FREQS = utils.FREQS_DICT["H4C"]
-CFGDIR, SKYDIR, OUTDIR = utils.CFGDIR, utils.SKYDIR, utils.OUTDIR
+H4C_FREQS = paths.phase_two_freqs()
+CFGDIR, SKYDIR, OUTDIR = paths.CFGDIR, paths.SKYDIR, paths.OUTDIR
 NTIMES, INTEGRATION, START_TIME = (
     utils.VALIDATION_SIM_NTIMES,
     utils.VALIDATION_SIM_INTEGRATION_TIME,
@@ -30,7 +30,7 @@ def make_tele_config(
     config = f"""
 beam_paths:
   0: !UVBeam
-    filename: '{utils.BEAMDIR}/NF_HERA_Vivaldi_efield_beam_extrap.fits'
+    filename: '{paths.BEAMDIR}/NF_HERA_Vivaldi_efield_beam_extrap.fits'
 telescope_location: {utils.HERA_LOC!s}
 telescope_name: HERA
 freq_interp_kind: '{freq_interp_kind}'
@@ -82,7 +82,7 @@ def make_hera_obsparam(
     prefix: str = "default",
 ):
     """Create an obsparam file."""
-    freq_vals = utils.FREQS_DICT[season][channels]
+    freq_vals = paths.phase_two_freqs()[channels]
 
     if NTIMES % chunks != 0:
         raise ValueError(f"Please choose chunks to divide NTIMES {NTIMES} cleanly")
@@ -95,14 +95,14 @@ def make_hera_obsparam(
 
     if isinstance(layout, str):
         # it's a name
-        layout_file = utils.make_hera_layout(name=layout, ideal=ideal_layout)
+        layout_file = paths.make_hera_layout(name=layout, ideal=ideal_layout)
     elif isinstance(layout, Path):
         layout_file = layout
     else:
         # it's a list of integers specifying antennas
-        layout_file = utils.make_hera_layout(
+        layout_file = paths.make_hera_layout(
             name=f"HERA_custom_subset_{md5(str(layout).encode()).hexdigest()}",
-            ants=layout,
+            ants=np.array(layout),
             ideal=ideal_layout,
         )
 
@@ -112,7 +112,7 @@ def make_hera_obsparam(
         beam_interpolator=beam_interpolator,
     )
 
-    modeldir = utils.get_direc(
+    modeldir = paths.get_direc(
         sky_model=sky_model,
         chunks=chunks,
         layout=layout_file.stem,
@@ -120,9 +120,9 @@ def make_hera_obsparam(
         prefix=prefix,
     )
 
-    obsparams_dir = utils.OBSPDIR / modeldir
+    obsparams_dir = paths.OBSPDIR / modeldir
     obsparams_dir.mkdir(parents=True, exist_ok=True)
-    outdir = utils.OUTDIR / modeldir
+    outdir = paths.OUTDIR / modeldir
     outdir.mkdir(parents=True, exist_ok=True)
 
     if redundant:
@@ -134,23 +134,22 @@ def make_hera_obsparam(
             from pyuvdata.utils import baseline_to_antnums
             from pyuvdata.utils.redundancy import get_antenna_redundancies
 
-            ants = np.genfromtxt(
-                layout_file, skip_header=1, usecols=(1, 3, 4, 5), delimiter="\t"
-            )
+            ants = np.genfromtxt(layout_file, skip_header=1, usecols=(1, 3, 4, 5), delimiter="\t")
             antnums = ants[:, 0]
             redbls = get_antenna_redundancies(
                 antnums, ants[:, 1:], tol=4.0, use_grid_alg=True, include_autos=True
             )[0]  # hera thresh
-            redbls = np.array(
-                [baseline_to_antnums(r[0], Nants_telescope=350) for r in redbls]
-            )
+            redbls = np.array([baseline_to_antnums(r[0], Nants_telescope=350) for r in redbls])
             np.savetxt(redfile, redbls)
         reds = [(int(a), int(b)) for a, b in redbls]
 
+    fqs = paths.phase_two_freqs()[:2]
+    df = fqs[1] - fqs[0]
+
     for fch, fv in zip(channels, freq_vals, strict=False):
         for ch in do_chunks:
-            jobname = modeldir / utils.get_file(chunk=ch, channel=fch, with_dir=False)
-            obsparams_file = utils.OBSPDIR / jobname
+            jobname = modeldir / paths.get_file(chunk=ch, channel=fch, with_dir=False)
+            obsparams_file = paths.OBSPDIR / jobname
             if obsparams_file.exists() and not force:
                 continue
 
@@ -165,9 +164,7 @@ def make_hera_obsparam(
                 },
                 "freq": {
                     "Nfreqs": 1,
-                    "channel_width": float(
-                        utils.FREQS_DICT[season][1] - utils.FREQS_DICT[season][0]
-                    ),
+                    "channel_width": float(df),
                     "start_freq": float(fv),
                 },
                 "sources": {"catalog": f"{SKYDIR}/{sky_model}/fch{fch:04d}.skyh5"},
@@ -179,8 +176,7 @@ def make_hera_obsparam(
                 "time": {
                     "Ntimes": Ntimes_per_chunk,
                     "integration_time": INTEGRATION,
-                    "start_time": START_TIME
-                    + INTEGRATION * ch * Ntimes_per_chunk / 86400,
+                    "start_time": START_TIME + INTEGRATION * ch * Ntimes_per_chunk / 86400,
                 },
                 # This order makes it fastest to put the vis-cpu data back in.
                 "polarization_array": [-5, -7, -8, -6],
@@ -192,6 +188,5 @@ def make_hera_obsparam(
 
             with open(obsparams_file, "w") as stream:
                 yaml.dump(obsparams, stream, default_flow_style=False, sort_keys=False)
-
 
     return layout_file

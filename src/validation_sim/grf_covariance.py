@@ -13,7 +13,7 @@ from astropy import cosmology
 from redshifted_gaussian_fields import generator
 from rich.console import Console
 
-from . import utils
+from . import paths
 from .slurm import slurmify
 
 cns = Console()
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def compute_grf_covariance(test_mode: bool = False, ell_max: int = 1250):
-    freqs = utils.FREQS_DICT["H6C"]
+    freqs = paths.phase_two_freqs()
 
     k0 = np.logspace(-2.0, 1.0, 11)
     a = k0 ** (-2.7)
@@ -59,7 +59,7 @@ def compute_grf_covariance(test_mode: bool = False, ell_max: int = 1250):
     t2 = time.time()
     cns.print(f"Elapsed time: {(t2 - t1) / 60.0} minutes.")
 
-    save_file_path = utils.SKYDIR / "raw" / "covariance.h5"
+    save_file_path = paths.RAWSKYDIR / "covariance.h5"
     gcfg.save_covariance_data(save_file_path)
     cns.print(f"Saved covariance data to {save_file_path}.")
 

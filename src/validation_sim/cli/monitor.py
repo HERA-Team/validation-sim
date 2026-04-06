@@ -6,7 +6,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.rule import Rule
 
-from .. import utils
+from .. import paths
 
 cns = Console()
 cprint = cns.print
@@ -30,8 +30,8 @@ def main(
     chunked: bool = False,
 ):
     """Monitor the status of simulation runs."""
-    logdir = utils.LOGDIR / "vis"
-    outdir = utils.OUTDIR
+    logdir = paths.LOGDIR / "vis"
+    outdir = paths.OUTDIR
 
     def globify_options(options, fmt: str = "", allow_omission: bool = False):
         if options:
@@ -58,7 +58,7 @@ def main(
     else:
         raise ValueError("You can't not show redundant and not redundant.")
 
-    fmt = utils.DIRFMT.replace("{chunks:05d}", "{chunks}")  # to use string glob
+    fmt = paths.DIRFMT.replace("{chunks:05d}", "{chunks}")  # to use string glob
     modelglob = fmt.format(
         sky_model=sky_glob,
         prefix=prefix_glob,
@@ -77,7 +77,7 @@ def main(
     all_out_models = [pth.relative_to(outdir) for pth in sorted(outdir.glob(modelglob))]
 
     for mdl in all_log_models:
-        parameters = utils.parse_direc(mdl)
+        parameters = paths.parse_direc(mdl)
 
         cprint(Rule(str(mdl)))
 
@@ -90,7 +90,7 @@ def main(
         files = []
         for channel in channels:
             for chunk in chunks_list:
-                fname = utils.get_file(chunk=chunk, channel=channel, with_dir=False).name
+                fname = paths.get_file(chunk=chunk, channel=channel, with_dir=False).name
                 # Get the *latest* logfile
                 logfl = sorted((logdir / mdl).glob(f"{fname}-*.out"))
                 logfl = logfl[-1] if len(logfl) > 0 else None
@@ -121,14 +121,14 @@ def main(
                 f"[red]{len(weird_size)} files have odd sizes: (median {mean_size / 1024**3:.3f} GB)"
             )
             for outfl, flsize in weird_size:
-                cprint(f"\t{outfl.relative_to(utils.REPODIR)}: {flsize / 1024**3:.3f} GB")
+                cprint(f"\t{outfl.relative_to(paths.REPODIR)}: {flsize / 1024**3:.3f} GB")
 
         if run_with_error := [x[2] for x in files if x[2] is not None and x[3] is None]:
             cprint(f"[red]{len(run_with_error)} files errored:")
             run_with_error = run_with_error[:max_prints]
 
             for x in run_with_error:
-                cprint(f"\t{x.relative_to(utils.REPODIR)}")
+                cprint(f"\t{x.relative_to(paths.REPODIR)}")
             cprint()
 
             with open(run_with_error[-1]) as fl:

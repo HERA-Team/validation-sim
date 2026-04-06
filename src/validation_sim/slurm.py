@@ -5,16 +5,16 @@ import subprocess
 from functools import wraps
 from typing import Any
 
-from . import utils
+from . import paths
 
 logger = logging.getLogger(__name__)
 
 
 def _get_sbatch_program(gpu: bool, slurm_override: dict[str, Any] | None = None):
     """Format an SBATCH program from parts."""
-    conda_params = utils.HPC_CONFIG["conda"]
-    module_params = utils.HPC_CONFIG["module"]
-    slurm_params = utils.HPC_CONFIG["slurm"]["gpu" if gpu else "cpu"]
+    conda_params = paths.HPC_CONFIG["conda"]
+    module_params = paths.HPC_CONFIG["module"]
+    slurm_params = paths.HPC_CONFIG["slurm"]["gpu" if gpu else "cpu"]
 
     if slurm_override is not None:  # Modify slurm options
         for k, v in slurm_override.items():
@@ -45,7 +45,6 @@ def slurmify(
     partition: str | None = None,
 ):
     def inner(fnc):
-
         @wraps(fnc)
         def wrapper(
             *args,
@@ -56,7 +55,7 @@ def slurmify(
         ):
             cmd = fnc(*args, **kwargs)
 
-            if not utils.HPC_CONFIG["slurm"]:
+            if not paths.HPC_CONFIG["slurm"]:
                 logger.info(f"Running the simulation locally\nCommand: {cmd}")
                 if not dry_run:
                     subprocess.call(cmd.split())
@@ -66,7 +65,7 @@ def slurmify(
             logname = logdir or cmdname
             jobtitle = jobname or cmdname
 
-            logname = utils.LOGDIR / logname
+            logname = paths.LOGDIR / logname
             logname.mkdir(parents=True, exist_ok=True)
 
             slurm_defaults = {"job-name": jobtitle, "output": f"{logname}/{outname}"}
@@ -87,7 +86,7 @@ def slurmify(
             # Make the SBATCH script minus hera-sim-vis.py command
             program = _get_sbatch_program(gpu=gpu, slurm_override=slurm_defaults)
 
-            sbatch_dir = utils.REPODIR / "batch_scripts" / cmdname
+            sbatch_dir = paths.REPODIR / "batch_scripts" / cmdname
             sbatch_dir.mkdir(parents=True, exist_ok=True)
 
             # Write job script and submit
