@@ -8,8 +8,6 @@ import numpy as np
 import yaml
 from parse import parse
 
-from validation_sim.utils import FLFMT
-
 logger = logging.getLogger(__name__)
 
 
@@ -112,7 +110,7 @@ class Paths:
         self, chunk: int, channel: int, with_dir: bool = True, ext: str | None = None, **kw
     ):
         """Get a file path for a given chunk and channel."""
-        stem = FLFMT.format(fch=channel, ch=chunk)
+        stem = self.FLFMT.format(fch=channel, ch=chunk)
 
         fl = self.get_direc(**kw) / stem if with_dir else Path(stem)
         if ext:
