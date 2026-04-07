@@ -53,8 +53,8 @@ def run_make_sky_model(
     sbatch_dir = paths.REPODIR / "batch_scripts/skymodel"
     sbatch_dir.mkdir(parents=True, exist_ok=True)
 
-    per_channel = "--per-channel-files" if per_channel_files else ""
-    with_confusion = "--with-confusion" if with_confusion else ""
+    per_channel = "--per-channel-files" if per_channel_files else "--single-file"
+    with_confusion = "--with-confusion" if with_confusion else "--no-confusion"
 
     if split_freqs:
         for fch in channels:
