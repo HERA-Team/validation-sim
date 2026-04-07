@@ -418,7 +418,7 @@ def make_ateam_model() -> SkyModel:
 
 
 def make_ptsrc_model(
-    channels: list[int], nside: int = 256, label="", write_per_channel: bool = False, **kw
+    channels: list[int], nside: int = 256, label="", per_channel_files: bool = False, **kw
 ):
     """Create a point-source model."""
     # Load GLEAM-like and A-Team SkyModel objects, making them if they do not exist
@@ -441,7 +441,7 @@ def make_ptsrc_model(
     # Write full-sky model.
     write_sky(ptsrc, f"ptsrc_nside{nside}{label}", None)
 
-    if not write_per_channel:
+    if not per_channel_files:
         return
 
     # Evaluate the models at a given frequency
