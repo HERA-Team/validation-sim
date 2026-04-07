@@ -23,11 +23,14 @@ H4C_FREQS = paths.phase_two_freqs() * units.Hz
 ATEAM_MODEL_FILE = paths.RAWSKYDIR / "ateam.skyh5"
 
 
-def write_sky(sky: SkyModel, model: str, channel: int):
+def write_sky(sky: SkyModel, model: str, channel: int | None):
     """Write a particular channel of a sky model to file."""
     d = paths.SKYDIR / model
     d.mkdir(parents=True, exist_ok=True)
-    sky.write_skyh5(f"{d}/fch{channel:04d}.skyh5", clobber=True)
+    if channel is not None:
+        sky.write_skyh5(f"{d}/fch{channel:04d}.skyh5", clobber=True)
+    else:
+        sky.write_skyh5(f"{d}/full.skyh5", clobber=True)
 
 
 def randsphere(n, theta_range=(0, np.pi), phi_range=(0, 2 * np.pi)):
@@ -414,7 +417,9 @@ def make_ateam_model() -> SkyModel:
     return SkyModel(**ateam_model_params)
 
 
-def make_ptsrc_model(channels: list[int], nside: int = 256, label="", **kw):
+def make_ptsrc_model(
+    channels: list[int], nside: int = 256, label="", write_per_channel: bool = False, **kw
+):
     """Create a point-source model."""
     # Load GLEAM-like and A-Team SkyModel objects, making them if they do not exist
     # in the default path
@@ -430,6 +435,14 @@ def make_ptsrc_model(channels: list[int], nside: int = 256, label="", **kw):
     gleam_like = make_gleam_like_model(
         nside=nside, max_flux_density=ateam.stokes[0].min().to_value("Jy"), **kw
     )
+
+    ptsrc = gleam_like.concat(ateam, inplace=False)
+
+    # Write full-sky model.
+    write_sky(ptsrc, f"ptsrc_nside{nside}{label}", None)
+
+    if not write_per_channel:
+        return
 
     # Evaluate the models at a given frequency
     for fch in channels:
