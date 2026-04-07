@@ -110,6 +110,11 @@ option_nside = click.option("--nside", default=256, show_default=True)
 @click.option("--split-freqs/--no-split-freqs", default=False)
 @click.option("--label", default="")
 @click.option("--with-confusion/--no-confusion", default=True)
+@click.option(
+    "--per-channel-files/--single-file",
+    default=False,
+    help="Whether to output one skyh5 file per channel, or a single file with all channels (only for ptsrc model).",
+)
 def sky_model(
     sky_model,
     freq_range,
@@ -122,12 +127,16 @@ def sky_model(
     dry_run,
     label,
     with_confusion,
+    per_channel_files,
 ):
     """Make SkyModel at given frequencies.
 
     Frequencies are based on H4C data.
     Outputs are written to the default directories, i.e. "./sky_models/<type>".
     """
+    if per_channel_files and sky_model != "ptsrc":
+        raise ValueError("Per-channel files are only supported for the ptsrc sky model.")
+
     channels = _cli.parse_channels(channels, freq_range)
     if local:
         from .. import sky_model as sm
@@ -137,7 +146,7 @@ def sky_model(
         elif sky_model == "diffuse":
             sm.make_diffuse_model(channels, nside, with_confusion=with_confusion, label=label)
         elif sky_model == "ptsrc":
-            sm.make_ptsrc_model(channels, nside, label=label)
+            sm.make_ptsrc_model(channels, nside, label=label, per_channel_files=per_channel_files)
         elif sky_model == "grf-eor":
             sm.make_grf_eor_model(
                 f"healpix-maps{nside}{label}.h5",
