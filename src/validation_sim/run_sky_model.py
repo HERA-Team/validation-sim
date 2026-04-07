@@ -17,6 +17,7 @@ def run_make_sky_model(
     split_freqs: bool = False,
     label: str = "",
     with_confusion: bool = True,
+    per_channel_files: bool = False,
 ):
     """Run the sky model creation via SLURM."""
     model = f"{sky_model}{nside}"
@@ -52,6 +53,9 @@ def run_make_sky_model(
     sbatch_dir = paths.REPODIR / "batch_scripts/skymodel"
     sbatch_dir.mkdir(parents=True, exist_ok=True)
 
+    per_channel = "--per-channel-files" if per_channel_files else ""
+    with_confusion = "--with-confusion" if with_confusion else ""
+
     if split_freqs:
         for fch in channels:
             logger.info(f"Working on frequency channel {fch}")
@@ -64,8 +68,8 @@ def run_make_sky_model(
                 continue
 
             cmd = (
-                f"time python vsim.py sky-model {sky_model} --local --nside {nside} "
-                f"--freq-range {fch} {fch + 1} --label '{label}'"
+                f"vsim sky-model {sky_model} --local --nside {nside} {with_confusion} "
+                f"--freq-range {fch} {fch + 1} --label '{label}' --per-channel-files"
             )
 
             if paths.HPC_CONFIG["slurm"]:
@@ -103,8 +107,8 @@ def run_make_sky_model(
             for g in groups
         )
         cmd = (
-            f"time python vsim.py sky-model {sky_model} --local --nside {nside} "
-            f"--label '{label}' {chan_opt}"
+            f"time vsim sky-model {sky_model} --local --nside {nside} "
+            f"--label '{label}' {chan_opt} {per_channel} {with_confusion}"
         )
 
         if paths.HPC_CONFIG["slurm"]:

@@ -168,6 +168,7 @@ def sky_model(
             split_freqs=split_freqs,
             label=label,
             with_confusion=with_confusion,
+            per_channel_files=per_channel_files,
         )
 
 
