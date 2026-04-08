@@ -29,8 +29,15 @@ logger = logging.getLogger(__name__)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-def cli():
+@click.option(
+    "--log-level",
+    default="INFO",
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
+    help="Logging level to use.",
+)
+def cli(log_level):
     """Make job scripts and run visibility simulations via hera-sim-vis.py."""
+    logger.setLevel(log_level)
 
 
 @cli.command
