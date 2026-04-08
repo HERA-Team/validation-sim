@@ -18,6 +18,7 @@ def run_make_sky_model(
     label: str = "",
     with_confusion: bool = True,
     per_channel_files: bool = False,
+    top_level_args: str = "",
 ):
     """Run the sky model creation via SLURM."""
     model = f"{sky_model}{nside}"
@@ -68,7 +69,7 @@ def run_make_sky_model(
                 continue
 
             cmd = (
-                f"vsim sky-model {sky_model} --local --nside {nside} {with_confusion} "
+                f"vsim {top_level_args} sky-model {sky_model} --local --nside {nside} {with_confusion} "
                 f"--freq-range {fch} {fch + 1} --label '{label}' --per-channel-files"
             )
 
@@ -107,7 +108,7 @@ def run_make_sky_model(
             for g in groups
         )
         cmd = (
-            f"time vsim sky-model {sky_model} --local --nside {nside} "
+            f"time vsim {top_level_args} sky-model {sky_model} --local --nside {nside} "
             f"--label '{label}' {chan_opt} {per_channel} {with_confusion}"
         )
 

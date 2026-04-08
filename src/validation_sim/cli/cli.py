@@ -35,9 +35,13 @@ logger = logging.getLogger(__name__)
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
     help="Logging level to use.",
 )
-def cli(log_level):
+@click.pass_context
+def cli(ctx, log_level):
     """Make job scripts and run visibility simulations via hera-sim-vis.py."""
     logger.setLevel(log_level)
+
+    # Put all options that should be passed through to subcommands in here.
+    ctx.obj = {"top-level-args": f"--log-level {log_level}"}
 
 
 @cli.command
@@ -122,7 +126,9 @@ option_nside = click.option("--nside", default=256, show_default=True)
     default=False,
     help="Whether to output one skyh5 file per channel, or a single file with all channels (only for ptsrc model).",
 )
+@click.pass_context
 def sky_model(
+    ctx,
     sky_model,
     freq_range,
     channels,
@@ -176,6 +182,7 @@ def sky_model(
             label=label,
             with_confusion=with_confusion,
             per_channel_files=per_channel_files,
+            top_level_args=ctx.obj["top-level-args"],
         )
 
 
@@ -227,7 +234,9 @@ def grf_covariance(test_mode, ell_max, local):
 @_cli.opts.slurm_override
 @_cli.opts.redundant
 @_cli.opts.prefix
+@click.pass_context
 def cornerturn(
+    ctx,
     sky_model,
     time_chunk,
     slurm_override,
@@ -307,7 +316,7 @@ def cornerturn(
     sbatch = _cli._get_sbatch_program(gpu=False, slurm_override=slurm_override)
 
     cmd = f"""
-    time vsim rechunk-fast \
+    time {ctx.obj["top-level-args"]} vsim rechunk-fast \
     --r-prototype "fch{{channel:04d}}_chunk{time_chunk:05d}.uvh5" \
     --chunk-size {new_chunk_size} \
     --channels {channels} \
