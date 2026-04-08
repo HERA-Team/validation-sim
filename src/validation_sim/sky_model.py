@@ -441,7 +441,7 @@ def make_ptsrc_model(
     ptsrc = gleam_like.concat(ateam, inplace=False)
 
     # Write full-sky model.
-    write_sky(ptsrc, f"ptsrc_nside{nside}{label}", None)
+    write_sky(ptsrc, f"ptsrc{nside}{label}", None)
 
     if not per_channel_files:
         return
