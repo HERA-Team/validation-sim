@@ -29,8 +29,10 @@ def write_sky(sky: SkyModel, model: str, channel: int | None):
     d.mkdir(parents=True, exist_ok=True)
     if channel is not None:
         sky.write_skyh5(f"{d}/fch{channel:04d}.skyh5", clobber=True)
+        logger.info(f"Wrote {model} channel {channel} to {d}/fch{channel:04d}.skyh5")
     else:
         sky.write_skyh5(f"{d}/full.skyh5", clobber=True)
+        logger.info(f"Wrote full {model} to {d}/full.skyh5")
 
 
 def randsphere(n, theta_range=(0, np.pi), phi_range=(0, 2 * np.pi)):
