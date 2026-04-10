@@ -138,7 +138,6 @@ def make_hera_obsparam(
         layout=layout_file.stem,
         redundant=redundant,
         prefix=prefix,
-        nbeams=n_unique_beams,
     )
 
     obsparams_dir = paths.OBSPDIR / modeldir
@@ -170,6 +169,7 @@ def make_hera_obsparam(
         for ch in do_chunks:
             jobname = modeldir / paths.get_file(chunk=ch, channel=fch, with_dir=False)
             obsparams_file = paths.OBSPDIR / jobname
+
             if obsparams_file.exists() and not force:
                 continue
 
