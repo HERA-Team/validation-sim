@@ -5,7 +5,7 @@ import operator
 import click
 import numpy as np
 
-from . import paths
+from .. import paths
 
 logger = logging.getLogger(__name__)
 
