@@ -25,5 +25,5 @@ slurm:
     mem: "23GB"              # Memory with unit
     ntasks: 1                # Number of tasks
     time: "0-00:60:00"       # slurm-aware time string format
-    gres: "gpu:v100-32:1"    # the v100-32 identifier ensures we use the V100 nodes with 32GB
+    gpus: "v100-32:1"    # the v100-32 identifier ensures we use the V100 nodes with 32GB
     
