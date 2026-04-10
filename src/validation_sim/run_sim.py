@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 
 from . import paths
-from .cli._cli_utils import _get_sbatch_program
+from .cli._utils import _get_sbatch_program
 from .obsparams import make_hera_obsparam
 
 logger = logging.getLogger(__name__)

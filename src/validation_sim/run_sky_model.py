@@ -2,7 +2,7 @@ import logging
 import subprocess
 
 from . import paths
-from ._cli_utils import _get_sbatch_program
+from .cli._utils import _get_sbatch_program
 
 logger = logging.getLogger(__name__)
 
