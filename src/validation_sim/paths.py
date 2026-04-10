@@ -203,7 +203,7 @@ class Paths:
         )
 
     def make_hera_layout(
-        self, name: str, ants: np.ndarray | None = None, ideal: bool = True
+        self, name: str, ants: np.ndarray | None = None, ideal: bool = True, n_unique_beams: int = 1
     ) -> Path:
         """Create a HERA layout."""
         if ants is None:
@@ -217,11 +217,16 @@ class Paths:
             self.IDEAL_HERA_LAYOUT if ideal else self.FULL_HERA_LAYOUT, skip_header=1
         )
 
+        # Get list of beam indices.
+        beam_idx = (
+            np.arange(len(ants)) % n_unique_beams if n_unique_beams > 0 else np.arange(len(ants))
+        )
+
         with open(direc / f"{name}.txt", "w") as fl:
             fl.write("Name    Number  BeamID  E       N       U\n")
-            for ant in ants:
+            for i, ant in enumerate(ants):
                 pos = full_layout[ant][1:]
-                fl.write(f"HH{ant}\t{ant}\t0\t{pos[0]}\t{pos[1]}\t{pos[2]}\n")
+                fl.write(f"HH{ant}\t{ant}\t{beam_idx[i]}\t{pos[0]}\t{pos[1]}\t{pos[2]}\n")
 
         return direc / f"{name}.txt"
 

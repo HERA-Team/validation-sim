@@ -25,12 +25,19 @@ def make_tele_config(
     freq_interp_kind: str = "cubic",
     spline_interp_order: int = 3,
     beam_interpolator: str = "az_za_map_coordinates",
+    unique_beams: tuple[int, ...] = (0,),
 ) -> Path:
     """Make a telescope config file."""
+    # make the unique beam pointers. This is really a dummy -- the unique
+    # beams are actually all the same file, but we make the simulator treat them
+    # as unique to test performance.
+    beam_str = ""
+    for beam in unique_beams:
+        beam_str += f"  {beam}: !UVBeam\n    filename: '{paths.BEAMDIR}/NF_HERA_Vivaldi_efield_beam_extrap.fits'\n"
+
     config = f"""
 beam_paths:
-  0: !UVBeam
-    filename: '{paths.BEAMDIR}/NF_HERA_Vivaldi_efield_beam_extrap.fits'
+{beam_str}
 telescope_location: {utils.HERA_LOC!s}
 telescope_name: HERA
 freq_interp_kind: '{freq_interp_kind}'
@@ -76,10 +83,10 @@ def make_hera_obsparam(
     freq_interp_kind: str = "cubic",
     spline_interp_order: int = 3,
     beam_interpolator: str = "az_za_map_coordinates",
-    season: str = "H4C",
     force: bool = False,
     redundant: bool = False,
     prefix: str = "default",
+    n_unique_beams: int = 1,  # -1 implies every antenna unique.
 ):
     """Create an obsparam file."""
     freq_vals = paths.phase_two_freqs()[channels]
@@ -95,7 +102,9 @@ def make_hera_obsparam(
 
     if isinstance(layout, str):
         # it's a name
-        layout_file = paths.make_hera_layout(name=layout, ideal=ideal_layout)
+        layout_file = paths.make_hera_layout(
+            name=layout, ideal=ideal_layout, n_unique_beams=n_unique_beams
+        )
     elif isinstance(layout, Path):
         layout_file = layout
     else:
@@ -104,12 +113,19 @@ def make_hera_obsparam(
             name=f"HERA_custom_subset_{md5(str(layout).encode()).hexdigest()}",
             ants=np.array(layout),
             ideal=ideal_layout,
+            n_unique_beams=n_unique_beams,
         )
+
+    ants = np.genfromtxt(layout_file, skip_header=1, usecols=(1, 2, 3, 4, 5), delimiter="\t")
+
+    beam_idx = ants[:, 1]
+    unique_beams = np.unique(beam_idx)
 
     tele_config_file = make_tele_config(
         freq_interp_kind=freq_interp_kind,
         spline_interp_order=spline_interp_order,
         beam_interpolator=beam_interpolator,
+        unique_beams=unique_beams,
     )
 
     modeldir = paths.get_direc(
@@ -134,10 +150,9 @@ def make_hera_obsparam(
             from pyuvdata.utils import baseline_to_antnums
             from pyuvdata.utils.redundancy import get_antenna_redundancies
 
-            ants = np.genfromtxt(layout_file, skip_header=1, usecols=(1, 3, 4, 5), delimiter="\t")
             antnums = ants[:, 0]
             redbls = get_antenna_redundancies(
-                antnums, ants[:, 1:], tol=4.0, use_grid_alg=True, include_autos=True
+                antnums, ants[:, 2:5], tol=4.0, use_grid_alg=True, include_autos=True
             )[0]  # hera thresh
             redbls = np.array([baseline_to_antnums(r[0], Nants_telescope=350) for r in redbls])
             np.savetxt(redfile, redbls)

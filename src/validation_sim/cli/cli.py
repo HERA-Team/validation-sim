@@ -8,8 +8,8 @@ from pathlib import Path
 import click
 from rich.logging import RichHandler
 
-from .. import _cli_utils as _cli
 from .. import paths
+from . import _utils
 from .monitor import type_click_app as monitor_app
 
 # TODO: this should be better refactored into a "profiling" sub-group
@@ -45,7 +45,7 @@ def cli(ctx, log_level):
 
 
 @cli.command
-@_cli.opts.add_opts
+@_utils.opts.add_opts
 @click.option(
     "--simulator",
     type=click.Choice(["fftvis", "matvis", "fftvis64", "fftvis32", "matvis-cpu"]),
@@ -59,22 +59,22 @@ def runsim(channels, freq_range, **kwargs):
     """
     from ..run_sim import run_validation_sim
 
-    channels = _cli.parse_channels(channels, freq_range)
+    channels = _utils.parse_channels(channels, freq_range)
     kwargs.pop("beam_interpolator", None)
     run_validation_sim(channels=channels, **kwargs)
 
 
 @cli.command("make-obsparams")
-@_cli.opts.layout
-@_cli.opts.ants
-@_cli.opts.ideal_layout
-@_cli.opts.channels
-@_cli.opts.freq_range
-@_cli.opts.sky_model
-@_cli.opts.n_time_chunks
-@_cli.opts.spline_interp_order
-@_cli.opts.redundant
-@_cli.opts.do_time_chunks
+@_utils.opts.layout
+@_utils.opts.ants
+@_utils.opts.ideal_layout
+@_utils.opts.channels
+@_utils.opts.freq_range
+@_utils.opts.sky_model
+@_utils.opts.n_time_chunks
+@_utils.opts.spline_interp_order
+@_utils.opts.redundant
+@_utils.opts.do_time_chunks
 @click.option("--beam-interpolator", default="az_za_map_coordinates")
 def make_obsparams(
     layout,
@@ -91,7 +91,7 @@ def make_obsparams(
     """Make obsparams for H4C simulations given a sky model and frequencies."""
     from ..obsparams import make_hera_obsparam
 
-    channels = _cli.parse_channels(channels, freq_range)
+    channels = _utils.parse_channels(channels, freq_range)
 
     make_hera_obsparam(
         layout=layout,
@@ -111,11 +111,11 @@ option_nside = click.option("--nside", default=256, show_default=True)
 
 @cli.command("sky-model")
 @click.argument("sky_model", type=click.Choice(["gsm", "diffuse", "ptsrc", "grf-eor"]))
-@_cli.opts.channels
-@_cli.opts.freq_range
-@_cli.opts.slurm_override
-@_cli.opts.skip_existing
-@_cli.opts.dry_run
+@_utils.opts.channels
+@_utils.opts.freq_range
+@_utils.opts.slurm_override
+@_utils.opts.skip_existing
+@_utils.opts.dry_run
 @option_nside
 @click.option("--local/--slurm", default=False)
 @click.option("--split-freqs/--no-split-freqs", default=False)
@@ -150,7 +150,7 @@ def sky_model(
     if per_channel_files and sky_model != "ptsrc":
         raise ValueError("Per-channel files are only supported for the ptsrc sky model.")
 
-    channels = _cli.parse_channels(channels, freq_range)
+    channels = _utils.parse_channels(channels, freq_range)
     if local:
         from .. import sky_model as sm
 
@@ -211,7 +211,7 @@ def grf_covariance(test_mode, ell_max, local):
 
 
 @cli.command("cornerturn")
-@_cli.opts.sky_model
+@_utils.opts.sky_model
 @click.option("-c", "--time-chunk", default=0)
 @click.option("-n", "--new-chunk-size", default=2)
 @click.option("--nchunks-sim", default=3, type=int)
@@ -228,12 +228,12 @@ def grf_covariance(test_mode, ell_max, local):
     type=str,
     help="Channels to use, e.g. '0~1536'. If not given, all channels are used.",
 )
-@_cli.opts.layout
-@_cli.opts.log_level
-@_cli.opts.dry_run
-@_cli.opts.slurm_override
-@_cli.opts.redundant
-@_cli.opts.prefix
+@_utils.opts.layout
+@_utils.opts.log_level
+@_utils.opts.dry_run
+@_utils.opts.slurm_override
+@_utils.opts.redundant
+@_utils.opts.prefix
 @click.pass_context
 def cornerturn(
     ctx,
@@ -313,7 +313,7 @@ def cornerturn(
         ("time", estimated_time),
     )
 
-    sbatch = _cli._get_sbatch_program(gpu=False, slurm_override=slurm_override)
+    sbatch = _utils._get_sbatch_program(gpu=False, slurm_override=slurm_override)
 
     cmd = f"""
     time {ctx.obj["top-level-args"]} vsim rechunk-fast \
