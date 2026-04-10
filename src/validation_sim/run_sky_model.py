@@ -21,6 +21,11 @@ def run_make_sky_model(
     top_level_args: str = "",
 ):
     """Run the sky model creation via SLURM."""
+    if paths.HPC_CONFIG is None:
+        raise ValueError(
+            "HPC_CONFIG is not set. Cannot run sky model creation. Use --local in vsim sky-model command."
+        )
+
     model = f"{sky_model}{nside}"
     out_dir = paths.SKYDIR / f"{model}"
     logdir = paths.LOGDIR / f"skymodel/{model}"

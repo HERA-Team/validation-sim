@@ -33,7 +33,7 @@ def make_tele_config(
     # as unique to test performance.
     beam_str = ""
     for beam in unique_beams:
-        beam_str += f"  {beam}: !UVBeam\n    filename: '{paths.BEAMDIR}/NF_HERA_Vivaldi_efield_beam_extrap.fits'\n"
+        beam_str += f"  {int(beam)}: !UVBeam\n    filename: '{paths.BEAMDIR}/NF_HERA_Vivaldi_efield_beam_extrap.fits'\n"
 
     config = f"""
 beam_paths:
@@ -129,7 +129,7 @@ def make_hera_obsparam(
         freq_interp_kind=freq_interp_kind,
         spline_interp_order=spline_interp_order,
         beam_interpolator=beam_interpolator,
-        unique_beams=unique_beams,
+        unique_beams=tuple(unique_beams),
     )
 
     modeldir = paths.get_direc(

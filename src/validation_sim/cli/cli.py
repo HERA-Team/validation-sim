@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 from rich.logging import RichHandler
 
-from .. import paths
+from .. import paths, set_project_path
 from . import _utils
 from .monitor import type_click_app as monitor_app
 
@@ -35,10 +35,19 @@ logger = logging.getLogger(__name__)
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
     help="Logging level to use.",
 )
+@click.option(
+    "-p",
+    "--project-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    default=Path(),
+    help="Path to the root of the validation sim repository. If not given, defaults to the current working directory.",
+)
 @click.pass_context
-def cli(ctx, log_level):
+def cli(ctx, log_level, project_dir):
     """Make job scripts and run visibility simulations via hera-sim-vis.py."""
     logger.setLevel(log_level)
+    if project_dir is not None:
+        set_project_path(project_dir)
 
     # Put all options that should be passed through to subcommands in here.
     ctx.obj = {"top-level-args": f"--log-level {log_level}"}

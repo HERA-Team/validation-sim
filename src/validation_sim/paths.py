@@ -222,13 +222,14 @@ class Paths:
             np.arange(len(ants)) % n_unique_beams if n_unique_beams > 0 else np.arange(len(ants))
         )
 
-        with open(direc / f"{name}.txt", "w") as fl:
+        pth = direc / f"{name}_nbeams{n_unique_beams}.txt"
+        with pth.open("w") as fl:
             fl.write("Name    Number  BeamID  E       N       U\n")
             for i, ant in enumerate(ants):
                 pos = full_layout[ant][1:]
                 fl.write(f"HH{ant}\t{ant}\t{beam_idx[i]}\t{pos[0]}\t{pos[1]}\t{pos[2]}\n")
 
-        return direc / f"{name}.txt"
+        return pth
 
 
 paths = Paths()
