@@ -94,6 +94,7 @@ def run_validation_sim(
         layout=layout,
         redundant=redundant,
         prefix=prefix,
+        nbeams=n_unique_beams,
     )
 
     # We want to override the job-name to be <sky_model>-<fch>-<ch>, but the last two

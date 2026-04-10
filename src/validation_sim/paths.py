@@ -18,7 +18,9 @@ class Paths:
         # These paths and variables define some of the default directories and shared
         # config files for H4C validation simulations
         self.REPODIR = repodir if repodir is not None else Path()
-        self.DIRFMT = "{sky_model}/{prefix}/nt17280-{chunks:05d}chunks-{layout}-{redundant}"
+        self.DIRFMT = (
+            "{sky_model}/{prefix}/nt17280-{chunks:05d}chunks-{layout}-nbeams{beams}-{redundant}"
+        )
         self.FLFMT = "fch{fch:04d}_chunk{ch:05d}"
         self.COMPRESS_FMT = "ch{chunks}_{layout_file}.npy"
 
@@ -88,7 +90,13 @@ class Paths:
         return self.REPODIR / "simulator-specs"
 
     def get_direc(
-        self, sky_model: str, chunks: int, layout: str, redundant: bool, prefix: str = "default"
+        self,
+        sky_model: str,
+        chunks: int,
+        layout: str,
+        redundant: bool,
+        nbeams: int = 1,
+        prefix: str = "default",
     ) -> Path:
         """Get a directory path for a given set of parameters.
 
@@ -102,6 +110,7 @@ class Paths:
                 prefix=prefix,
                 chunks=chunks,
                 layout=layout,
+                beams=nbeams,
                 redundant="red" if redundant else "nonred",
             )
         )
@@ -122,7 +131,7 @@ class Paths:
         return parse(self.FLFMT, fname).named
 
     def parse_direc(self, direc: Path):
-        """Parse a directory name to extract the parametersin the directory structure.
+        """Parse a directory name to extract the parameters in the directory structure.
 
         The expected format is
         {sky_model}/{prefix}/nt17280-{chunks:05d}chunks-{layout}-{redundant}, but the

@@ -138,6 +138,7 @@ def make_hera_obsparam(
         layout=layout_file.stem,
         redundant=redundant,
         prefix=prefix,
+        nbeams=n_unique_beams,
     )
 
     obsparams_dir = paths.OBSPDIR / modeldir
