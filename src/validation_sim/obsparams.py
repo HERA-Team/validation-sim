@@ -55,7 +55,11 @@ spline_interp_opts:
   order: {spline_interp_order}
 """
 
-    _fname = f"hera_{freq_interp_kind}_{spline_interp_order}.yaml"
+    if unique_beams == (0,):
+        _fname = f"hera_{freq_interp_kind}_{spline_interp_order}.yaml"
+    else:
+        _fname = f"hera_{freq_interp_kind}_{spline_interp_order}_unique{len(unique_beams)}.yaml"
+
     fname = CFGDIR / "teleconfigs" / "tmp" / _fname
 
     fname.parent.mkdir(exist_ok=True, parents=True)

@@ -51,7 +51,12 @@ def cli(ctx, log_level):
     type=click.Choice(["fftvis", "matvis", "fftvis64", "fftvis32", "matvis-cpu"]),
     default="matvis",
 )
-def runsim(channels, freq_range, **kwargs):
+@click.option(
+    "--n-unique-beams",
+    default=1,
+    help="Number of unique beams to use in the simulation (for testing performance of interpolation).",
+)
+def runsim(channels, freq_range, n_unique_beams, **kwargs):
     """Run HERA validation simulations.
 
     Use the default parameters, configuration files, and directories for HERA sims
@@ -61,7 +66,7 @@ def runsim(channels, freq_range, **kwargs):
 
     channels = _utils.parse_channels(channels, freq_range)
     kwargs.pop("beam_interpolator", None)
-    run_validation_sim(channels=channels, **kwargs)
+    run_validation_sim(channels=channels, n_unique_beams=n_unique_beams, **kwargs)
 
 
 @cli.command("make-obsparams")
@@ -75,6 +80,11 @@ def runsim(channels, freq_range, **kwargs):
 @_utils.opts.spline_interp_order
 @_utils.opts.redundant
 @_utils.opts.do_time_chunks
+@click.option(
+    "--n-unique-beams",
+    default=1,
+    help="Number of unique beams to use in the simulation (for testing performance of interpolation).",
+)
 @click.option("--beam-interpolator", default="az_za_map_coordinates")
 def make_obsparams(
     layout,
@@ -87,6 +97,7 @@ def make_obsparams(
     beam_interpolator,
     redundant,
     do_time_chunks,
+    n_unique_beams,
 ):
     """Make obsparams for H4C simulations given a sky model and frequencies."""
     from ..obsparams import make_hera_obsparam
@@ -103,6 +114,7 @@ def make_obsparams(
         beam_interpolator=beam_interpolator,
         redundant=redundant,
         do_chunks=do_time_chunks,
+        n_unique_beams=n_unique_beams,
     )
 
 

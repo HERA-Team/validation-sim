@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 
 from . import paths
-from ._cli_utils import _get_sbatch_program
+from .cli._cli_utils import _get_sbatch_program
 from .obsparams import make_hera_obsparam
 
 logger = logging.getLogger(__name__)
@@ -48,6 +48,7 @@ def run_validation_sim(
     redundant: bool = False,
     prefix: str = "default",
     phase_center_name: str = "zenith",
+    n_unique_beams: int = 1,
 ):
     """Run a full validation sim on SLURM compute."""
     sgpu = "gpu" if gpu else "cpu"
@@ -75,6 +76,7 @@ def run_validation_sim(
         beam_interpolator=sc.get("interpolation_function", "az_za_map_coordinates"),
         redundant=redundant,
         prefix=prefix,
+        n_unique_beams=n_unique_beams,
     )
     if not layout_file.exists():
         raise ValueError(f"Error in creating layout file: {layout_file}")
