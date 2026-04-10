@@ -83,6 +83,8 @@ def run_validation_sim(
     else:
         pass
 
+    logger.info(f"Created obsparam layout file: {layout_file}")
+
     if not do_time_chunks:
         do_time_chunks = list(range(n_time_chunks))
 
@@ -91,7 +93,7 @@ def run_validation_sim(
     modeldir = paths.get_direc(
         sky_model=sky_model,
         chunks=n_time_chunks,
-        layout=layout,
+        layout=layout_file.stem,
         redundant=redundant,
         prefix=prefix,
     )
