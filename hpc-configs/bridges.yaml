@@ -9,7 +9,7 @@ conda:
 module:
   # List environment modules to load
   - "openmpi"
-  - "cuda/11.7.1"
+  - "cuda/12.6.1"
 
 slurm:
   # SLURM SBATCH options, listed as --flag: value
