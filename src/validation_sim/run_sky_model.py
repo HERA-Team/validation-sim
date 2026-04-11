@@ -19,6 +19,7 @@ def run_make_sky_model(
     with_confusion: bool = True,
     per_channel_files: bool = False,
     top_level_args: str = "",
+    conda: bool = True,
 ):
     """Run the sky model creation via SLURM."""
     if paths.HPC_CONFIG is None:
@@ -54,7 +55,7 @@ def run_make_sky_model(
         slurm_override = (*slurm_override, ("time", "0-00:15:00"))
 
     # Make the SBATCH script minus hera-sim-vis.py command
-    program = _get_sbatch_program(gpu=False, slurm_override=slurm_override)
+    program = _get_sbatch_program(gpu=False, conda=conda, slurm_override=slurm_override)
 
     sbatch_dir = paths.REPODIR / "batch_scripts/skymodel"
     sbatch_dir.mkdir(parents=True, exist_ok=True)

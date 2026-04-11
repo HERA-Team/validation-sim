@@ -10,7 +10,7 @@ from . import paths
 logger = logging.getLogger(__name__)
 
 
-def _get_sbatch_program(gpu: bool, slurm_override: dict[str, Any] | None = None):
+def _get_sbatch_program(gpu: bool, conda: bool, slurm_override: dict[str, Any] | None = None):
     """Format an SBATCH program from parts."""
     conda_params = paths.HPC_CONFIG["conda"]
     module_params = paths.HPC_CONFIG["module"]
@@ -23,14 +23,17 @@ def _get_sbatch_program(gpu: bool, slurm_override: dict[str, Any] | None = None)
     shebang = "#!/bin/bash"
     sbatch = "\n".join([f"#SBATCH --{k}={v}" for k, v in slurm_params.items()])
 
-    conda = """
+    if conda:
+        pyenv = """
 source {conda_path}/bin/activate
 conda activate {environment_name}
 """.format_map(conda_params)
+    else:
+        pyenv = "source .venv/bin/activate"
 
     module = "\n".join([f"module load {md}" for md in module_params])
 
-    return "\n".join([shebang, sbatch, conda, module])
+    return "\n".join([shebang, sbatch, pyenv, module])
 
 
 def slurmify(
@@ -43,6 +46,7 @@ def slurmify(
     defaultmem: str | None = None,
     defaulttasks: int | None = None,
     partition: str | None = None,
+    conda: bool = True,
 ):
     def inner(fnc):
         @wraps(fnc)
@@ -84,7 +88,7 @@ def slurmify(
             slurm_defaults |= slurm_override
 
             # Make the SBATCH script minus hera-sim-vis.py command
-            program = _get_sbatch_program(gpu=gpu, slurm_override=slurm_defaults)
+            program = _get_sbatch_program(gpu=gpu, conda=conda, slurm_override=slurm_defaults)
 
             sbatch_dir = paths.REPODIR / "batch_scripts" / cmdname
             sbatch_dir.mkdir(parents=True, exist_ok=True)

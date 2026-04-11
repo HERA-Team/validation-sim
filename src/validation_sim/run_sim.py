@@ -49,6 +49,7 @@ def run_validation_sim(
     prefix: str = "default",
     phase_center_name: str = "zenith",
     n_unique_beams: int = 1,
+    conda: bool = True,
 ):
     """Run a full validation sim on SLURM compute."""
     sgpu = "gpu" if gpu else "cpu"
@@ -115,7 +116,7 @@ def run_validation_sim(
         slurm_override = (*slurm_override, ("time", f"0-00:{time_est}:00"))
 
     # Make the SBATCH script minus hera-sim-vis.py command
-    program = _get_sbatch_program(gpu, slurm_override)
+    program = _get_sbatch_program(gpu=gpu, conda=conda, slurm_override=slurm_override)
 
     out_dir = paths.OUTDIR / modeldir
     obsp_dir = paths.OBSPDIR / modeldir

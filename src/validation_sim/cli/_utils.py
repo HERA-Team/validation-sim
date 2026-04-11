@@ -206,7 +206,7 @@ class opts:
         return fnc
 
 
-def _get_sbatch_program(gpu: bool, slurm_override=None):
+def _get_sbatch_program(gpu: bool, conda: bool = True, slurm_override=None):
     """Format an SBATCH program from parts."""
     if paths.HPC_CONFIG is None:
         raise ValueError("HPC_CONFIG is not set. Cannot format SBATCH program.")
@@ -222,12 +222,17 @@ def _get_sbatch_program(gpu: bool, slurm_override=None):
     shebang = "#!/bin/bash"
     sbatch = "\n".join([f"#SBATCH --{k}={v}" for k, v in slurm_params.items()])
 
-    conda = """
+    if conda:
+        pyenv = """
 source ~/.bashrc
 source {conda_path}/bin/activate
 conda activate {environment_name}
-""".format_map(conda_params)
+    """.format_map(conda_params)
+    else:
+        pyenv = """
+source .venv/bin/activate
+"""
 
     module = "\n".join([f"module load {md}" for md in module_params])
 
-    return "\n".join([shebang, sbatch, conda, module])
+    return "\n".join([shebang, sbatch, pyenv, module])

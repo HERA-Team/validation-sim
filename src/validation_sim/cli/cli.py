@@ -42,15 +42,20 @@ logger = logging.getLogger(__name__)
     default=Path(),
     help="Path to the root of the validation sim repository. If not given, defaults to the current working directory.",
 )
+@click.option(
+    "--conda/--uv",
+    default=True,
+    help="Whether to use conda or uv for environment management.",
+)
 @click.pass_context
-def cli(ctx, log_level, project_dir):
+def cli(ctx, log_level, project_dir, conda):
     """Make job scripts and run visibility simulations via hera-sim-vis.py."""
     logger.setLevel(log_level)
     if project_dir is not None:
         set_project_path(project_dir)
 
     # Put all options that should be passed through to subcommands in here.
-    ctx.obj = {"top-level-args": f"--log-level {log_level}"}
+    ctx.obj = {"top-level-args": f"--log-level {log_level}", "conda": conda}
 
 
 @cli.command
@@ -65,7 +70,8 @@ def cli(ctx, log_level, project_dir):
     default=1,
     help="Number of unique beams to use in the simulation (for testing performance of interpolation).",
 )
-def runsim(channels, freq_range, n_unique_beams, **kwargs):
+@click.pass_context
+def runsim(ctx, channels, freq_range, n_unique_beams, **kwargs):
     """Run HERA validation simulations.
 
     Use the default parameters, configuration files, and directories for HERA sims
@@ -75,7 +81,9 @@ def runsim(channels, freq_range, n_unique_beams, **kwargs):
 
     channels = _utils.parse_channels(channels, freq_range)
     kwargs.pop("beam_interpolator", None)
-    run_validation_sim(channels=channels, n_unique_beams=n_unique_beams, **kwargs)
+    run_validation_sim(
+        channels=channels, n_unique_beams=n_unique_beams, conda=ctx.obj["conda"], **kwargs
+    )
 
 
 @cli.command("make-obsparams")
@@ -204,6 +212,7 @@ def sky_model(
             with_confusion=with_confusion,
             per_channel_files=per_channel_files,
             top_level_args=ctx.obj["top-level-args"],
+            conda=ctx.obj["conda"],
         )
 
 
@@ -212,23 +221,27 @@ def sky_model(
 @click.option("--seed", type=int, default=2038)
 @click.option("--low-memory/--fast-cpu", default=True)
 @click.option("--local/--slurm", default=False)
-def grf_realization(nside, seed, local, low_memory):
+@click.pass_context
+def grf_realization(ctx, nside, seed, low_memory, local):
     from ..grf_realization import run_compute_grf_realization
 
-    run_compute_grf_realization(nside=nside, seed=seed, low_memory=low_memory)
+    run_compute_grf_realization(
+        nside=nside, seed=seed, low_memory=low_memory, conda=ctx.obj["conda"]
+    )
 
 
 @cli.command
 @click.option("--test-mode/--production", default=False)
 @click.option("--ell-max", default=1250)
 @click.option("--local/--slurm", default=False)
-def grf_covariance(test_mode, ell_max, local):
+@click.pass_context
+def grf_covariance(ctx, test_mode, ell_max, local):
     from ..grf_covariance import compute_grf_covariance, run_compute_grf_covariance
 
     if local:
         compute_grf_covariance(test_mode, ell_max=ell_max)
     else:
-        run_compute_grf_covariance(test_mode, ell_max=ell_max)
+        run_compute_grf_covariance(test_mode, ell_max=ell_max, conda=ctx.obj["conda"])
 
 
 @cli.command("cornerturn")
@@ -334,7 +347,9 @@ def cornerturn(
         ("time", estimated_time),
     )
 
-    sbatch = _utils._get_sbatch_program(gpu=False, slurm_override=slurm_override)
+    sbatch = _utils._get_sbatch_program(
+        gpu=False, conda=ctx.obj["conda"], slurm_override=slurm_override
+    )
 
     cmd = f"""
     time {ctx.obj["top-level-args"]} vsim rechunk-fast \
