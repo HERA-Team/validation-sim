@@ -217,6 +217,15 @@ css = [
 ]
 
 [[package]]
+name = "cached-property"
+version = "2.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/76/4b/3d870836119dbe9a5e3c9a61af8cc1a8b69d75aea564572e385882d5aefb/cached_property-2.0.1.tar.gz", hash = "sha256:484d617105e3ee0e4f1f58725e72a8ef9e93deee462222dbd51cd91230897641", size = 10574, upload-time = "2024-10-25T15:43:55.667Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/11/0e/7d8225aab3bc1a0f5811f8e1b557aa034ac04bdf641925b30d3caf586b28/cached_property-2.0.1-py3-none-any.whl", hash = "sha256:f617d70ab1100b7bcf6e42228f9ddcb78c676ffa167278d9f730d1c2fba69ccb", size = 7428, upload-time = "2024-10-25T15:43:54.711Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2026.2.25"
 source = { registry = "https://pypi.org/simple" }
@@ -482,6 +491,18 @@ wheels = [
 ]
 
 [[package]]
+name = "deprecation"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5a/d3/8ae2869247df154b64c1884d7346d412fed0c49df84db635aab2d1c40e62/deprecation-2.1.0.tar.gz", hash = "sha256:72b3bde64e5d778694b0cf68178aed03d15e15477116add3fb773e581f9518ff", size = 173788, upload-time = "2020-04-20T14:23:38.738Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/02/c3/253a89ee03fc9b9682f1541728eb66db7db22148cd94f89ab22528cd1e1b/deprecation-2.1.0-py2.py3-none-any.whl", hash = "sha256:a10811591210e1fb0e768a8c25517cabeabcba6f0bf96564f8ff45189f90b14a", size = 11178, upload-time = "2020-04-20T14:23:36.581Z" },
+]
+
+[[package]]
 name = "docstring-parser"
 version = "0.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -714,6 +735,18 @@ wheels = [
 ]
 
 [[package]]
+name = "hera-cli-utils"
+version = "0.2.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "line-profiler" },
+    { name = "psutil" },
+    { name = "rich" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/92/5b/0b6f9fe9abad678790d6624c84e3fbe4368dcd66044a0bac23d5ac838c32/hera_cli_utils-0.2.2.tar.gz", hash = "sha256:694115090fea863f4f9ab1784d411df834ea2c178b381fbf51c89e09f3b3c613", size = 22348, upload-time = "2025-12-29T02:48:20.653Z" }
+
+[[package]]
 name = "hera-filters"
 version = "0.1.7"
 source = { registry = "https://pypi.org/simple" }
@@ -739,6 +772,28 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/68/d8/9c3700e5acdb99e98b84314318faa0f4fc3d939f8b0d756824fb94af9d6a/hera_qm-2.2.0.tar.gz", hash = "sha256:8a14125e6c89249f7856e83de00c8ff7b5d6f0484123d9ecfb286f495a1425a4", size = 62436104, upload-time = "2024-07-11T11:19:56.781Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ea/70/7e213af154605e838a24521041e729b06c44cfb6ef42459bd2fb7ec7040e/hera_qm-2.2.0-py3-none-any.whl", hash = "sha256:038bbd174db1e9cb6de06a771fc3ce39ae9c735ac91764fb1485526fc0b4d0f8", size = 62821301, upload-time = "2024-07-11T11:19:52.153Z" },
+]
+
+[[package]]
+name = "hera-sim"
+version = "4.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "astropy" },
+    { name = "astropy-healpix" },
+    { name = "cached-property" },
+    { name = "deprecation" },
+    { name = "hera-cli-utils" },
+    { name = "numpy" },
+    { name = "pyuvdata" },
+    { name = "pyuvsim" },
+    { name = "pyyaml" },
+    { name = "rich" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3c/4d/4af29f4089484ffa091d7b909bd56f1d4347863fee14f5101ae63337601d/hera_sim-4.3.1.tar.gz", hash = "sha256:b85de8d58511f7a2df398416efbe7ad9db454d97893350bff88971cc022e99d0", size = 13160846, upload-time = "2025-01-13T11:26:13.326Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c5/e2/57e6aa00e4adba801798a64971c0fcf821b9e1dddfae841210d94ad069f8/hera_sim-4.3.1-py3-none-any.whl", hash = "sha256:9dd3d85254319491dde71982d76d838bebebdfd15ea088b16e0ef2267ec9de50", size = 2584680, upload-time = "2025-01-13T11:26:10.409Z" },
 ]
 
 [[package]]
@@ -2078,6 +2133,26 @@ wheels = [
 ]
 
 [[package]]
+name = "pyuvsim"
+version = "1.4.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "astropy" },
+    { name = "numpy" },
+    { name = "psutil" },
+    { name = "pyradiosky" },
+    { name = "pyuvdata" },
+    { name = "pyyaml" },
+    { name = "scipy" },
+    { name = "setuptools" },
+    { name = "setuptools-scm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fe/40/c4fbf27c8cffacabc8d6c54ec20b3c01dc9eaecb1130cbf2395743d97509/pyuvsim-1.4.2.tar.gz", hash = "sha256:943b4ff2e6292e70e6e944db5ebcdaed3a3c625240a9c1611e058d837a4239bd", size = 18619622, upload-time = "2025-10-03T22:21:47.942Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d3/c0/39ceef1d5c7d8bbda34c7f89e84cab6ac2bdf0091fcbac33e709f976fecf/pyuvsim-1.4.2-py3-none-any.whl", hash = "sha256:f865110090e2718222433ae4c34917f59c8074be905fab6680534c04059ab375", size = 15603877, upload-time = "2025-10-03T22:21:45.356Z" },
+]
+
+[[package]]
 name = "pywinpty"
 version = "3.0.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2646,6 +2721,7 @@ dependencies = [
     { name = "healpy" },
     { name = "hera-filters" },
     { name = "hera-qm" },
+    { name = "hera-sim" },
     { name = "jupyter" },
     { name = "line-profiler" },
     { name = "matplotlib" },
@@ -2676,6 +2752,7 @@ requires-dist = [
     { name = "healpy", specifier = ">=1.19.0" },
     { name = "hera-filters", specifier = "==0.1.7" },
     { name = "hera-qm", specifier = "==2.2.0" },
+    { name = "hera-sim", specifier = ">=4.3.1" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "line-profiler", specifier = ">=5.0.2" },
     { name = "matplotlib", specifier = ">=3.10.8" },
