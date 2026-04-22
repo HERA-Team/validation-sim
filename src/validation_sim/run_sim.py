@@ -184,9 +184,10 @@ def run_validation_sim(
                         ]
                     )
                 elif simulator == "fftvis":
+                    dstr = "gpu" if gpu else "cpu"
                     prof_funcs.extend(
                         [
-                            "fftvis.simulate:simulate",
+                            f"fftvis.{dstr}.{dstr}_simulate:{dstr.upper()}SimulationEngine",
                             "hera_sim.visibilities.fftvis:FFTVis",
                         ]
                     )
