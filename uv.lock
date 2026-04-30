@@ -778,8 +778,8 @@ wheels = [
 
 [[package]]
 name = "hera-sim"
-version = "4.3.3.dev32+g3f2d24a92"
-source = { git = "https://github.com/hera-team/hera_sim?rev=support-for-multibeam-fftvis#3f2d24a923f0b5a76b373cdfee71f82a383bf553" }
+version = "4.3.3.dev46+gccc89e49c"
+source = { git = "https://github.com/hera-team/hera_sim?rev=support-for-multibeam-fftvis#ccc89e49c5aa123dbc6eda8e04a064d4212475c4" }
 dependencies = [
     { name = "astropy" },
     { name = "astropy-healpix" },

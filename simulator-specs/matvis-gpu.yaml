@@ -1,6 +1,6 @@
 simulator: MatVis
 precision: 2
-coord_method: "CoordinateRotationERFA"
+coord_method: "GPUCoordinateRotationERFA"
 coord_method_params:
   update_bcrs_every: 1000000 # seconds before updating (this is more than a day, so never update -- fast and no jitter)
 use_gpu: true
