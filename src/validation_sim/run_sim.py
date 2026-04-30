@@ -46,6 +46,7 @@ def run_validation_sim(
     profile: bool = False,
     profile_timer_unit=1e-2,
     redundant: bool = False,
+    compress: bool = True,
     prefix: str = "default",
     phase_center_name: str = "zenith",
     n_unique_beams: int = 1,
@@ -135,7 +136,11 @@ def run_validation_sim(
         f"--phase-center-name {phase_center_name}"
     )
 
-    if not redundant:
+    if not redundant and compress:
+        # Compress the results by redundancy unless unless the user explicitly said not
+        # to, or if we can send in purely the redundant info to the simulator to begin
+        # with. This is because the compression step is not free, and if we can avoid it
+        # by just simulating the redundant info, then that is preferable.
         sim_options += f" --compress {compress_cache}"
 
     for fch in channels:

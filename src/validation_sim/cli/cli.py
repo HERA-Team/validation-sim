@@ -70,8 +70,12 @@ def cli(ctx, log_level, project_dir, conda):
     default=1,
     help="Number of unique beams to use in the simulation (for testing performance of interpolation).",
 )
+@click.option(
+    "--compress/--no-compress",
+    default=True,
+)
 @click.pass_context
-def runsim(ctx, channels, freq_range, n_unique_beams, **kwargs):
+def runsim(ctx, channels, freq_range, n_unique_beams, compress, **kwargs):
     """Run HERA validation simulations.
 
     Use the default parameters, configuration files, and directories for HERA sims
@@ -82,7 +86,11 @@ def runsim(ctx, channels, freq_range, n_unique_beams, **kwargs):
     channels = _utils.parse_channels(channels, freq_range)
     kwargs.pop("beam_interpolator", None)
     run_validation_sim(
-        channels=channels, n_unique_beams=n_unique_beams, conda=ctx.obj["conda"], **kwargs
+        channels=channels,
+        n_unique_beams=n_unique_beams,
+        conda=ctx.obj["conda"],
+        compress=compress,
+        **kwargs,
     )
 
 

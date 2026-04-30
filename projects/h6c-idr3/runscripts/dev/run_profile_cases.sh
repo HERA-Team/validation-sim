@@ -1,5 +1,5 @@
 
-common="--log-level INFO --skip-existing --do-time-chunks 0 --channels 100 --profile --slurm-override time '01:00:00' --not-redundant  --sky-model ptsrc1024 --layout FULL"
+common="--log-level INFO --skip-existing --do-time-chunks 0 --channels 100 --profile --slurm-override time '00:15:00' --not-redundant  --sky-model ptsrc1024 --layout FULL"
 
 # These two simply check that 135 time chunks is sufficient to avoid excessive overhead (corresponds to 128 times in each chunk)
 # uv run vsim --uv runsim ${common} --gpu --n-time-chunks 135 --simulator matvis  --prefix h6c-idr3-profiling-matvis
