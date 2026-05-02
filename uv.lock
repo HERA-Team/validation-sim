@@ -575,8 +575,8 @@ wheels = [
 
 [[package]]
 name = "fftvis"
-version = "1.0.1.dev37+g480f9012a"
-source = { git = "https://github.com/tyler-a-cox/fftvis?rev=multibeam#480f9012a16a79a9a6dee16d94666b66e8f0322b" }
+version = "1.0.1.dev38+g8a8a7dd7d"
+source = { git = "https://github.com/tyler-a-cox/fftvis?rev=multibeam#8a8a7dd7d2fee263b212ccaf21b05a9fec979024" }
 dependencies = [
     { name = "finufft" },
     { name = "matvis" },
@@ -1470,8 +1470,8 @@ wheels = [
 
 [[package]]
 name = "matvis"
-version = "1.3.3"
-source = { registry = "https://pypi.org/simple" }
+version = "1.3.4.dev9+g1f202d8e6"
+source = { git = "https://github.com/hera-team/matvis?rev=fix-memory-copies-getz#1f202d8e6d27992b02f016d3cdbd3ece731653a7" }
 dependencies = [
     { name = "astropy" },
     { name = "click" },
@@ -1483,10 +1483,6 @@ dependencies = [
     { name = "pyuvdata", version = "3.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14'" },
     { name = "rich" },
     { name = "scipy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a5/f5/dcfe2c209f1873a8c5ca1c8fb56ca7132dfc230b855cfb72f76bd9fd4344/matvis-1.3.3.tar.gz", hash = "sha256:9af8005c2c1222ac878ab5480d89493cf9d978839309b284c6b4e2d782dda8b6", size = 2306846, upload-time = "2026-04-14T17:33:34.408Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e4/e9/f7a8426a3980a172f376b5bc4db3d9c00f7db5ba3c1cd303f03c37b2e96e/matvis-1.3.3-py2.py3-none-any.whl", hash = "sha256:6d023212184c310881d9179a672f43c954ade10c4a810dec4723c3b6ad9e2c30", size = 2061158, upload-time = "2026-04-14T17:33:32.35Z" },
 ]
 
 [[package]]
@@ -2791,7 +2787,7 @@ requires-dist = [
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "line-profiler", specifier = ">=5.0.2" },
     { name = "matplotlib", specifier = ">=3.10.8" },
-    { name = "matvis", specifier = "==1.3.3" },
+    { name = "matvis", git = "https://github.com/hera-team/matvis?rev=fix-memory-copies-getz" },
     { name = "numpy", specifier = "==2.4.4" },
     { name = "parse", specifier = ">=1.21.1" },
     { name = "pygdsm", specifier = ">=1.7.0" },

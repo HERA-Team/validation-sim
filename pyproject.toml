@@ -22,7 +22,7 @@ dependencies = [
     "jupyter>=1.1.1",
     "line-profiler>=5.0.2",
     "matplotlib>=3.10.8",
-    "matvis==1.3.3",
+    "matvis",
     "numpy==2.4.4",
     "parse>=1.21.1",
     "pygdsm>=1.7.0",
@@ -116,6 +116,7 @@ max-complexity = 22
 [tool.uv.sources]
 hera-sim = { git = "https://github.com/hera-team/hera_sim", rev = "support-for-multibeam-fftvis" }
 fftvis = { git = "https://github.com/tyler-a-cox/fftvis", rev = "multibeam" }
+matvis = { git = "https://github.com/hera-team/matvis", rev = "fix-memory-copies-getz" }
 
 [dependency-groups]
 dev = [
