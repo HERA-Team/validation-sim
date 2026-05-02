@@ -167,8 +167,7 @@ def run_validation_sim(
 
                 if gpu:
                     trace = (
-                        "nsys profile -w true -t cuda,cublas -s cpu -f true -x true "
-                        f"-o profiles/{proflabel} "
+                        f"nsys profile -w true -t cuda,cublas -s cpu -f true -x true -o {profout} "
                     )
                 else:
                     trace = ""
