@@ -62,7 +62,7 @@ def cli(ctx, log_level, project_dir, conda):
 @_utils.opts.add_opts
 @click.option(
     "--simulator",
-    type=click.Choice(["fftvis", "matvis", "fftvis64", "fftvis32", "matvis-cpu"]),
+    type=click.Choice(["fftvis", "matvis", "fftvis64", "fftvis32", "fftvis128", "matvis-cpu"]),
     default="matvis",
 )
 @click.option(

@@ -7,4 +7,4 @@ nprocesses: 128
 coord_method: CoordinateRotationERFA
 coord_method_params:
   update_bcrs_every: 100000000
-nchunks: 16  # should probably find a better way to specify this. Its optimal value depends on Nsrc and the number of processes
+nchunks: 64  # should probably find a better way to specify this. Its optimal value depends on Nsrc and the number of processes
