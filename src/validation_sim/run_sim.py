@@ -51,6 +51,7 @@ def run_validation_sim(
     phase_center_name: str = "zenith",
     n_unique_beams: int = 1,
     conda: bool = True,
+    coupled: bool = False,
 ):
     """Run a full validation sim on SLURM compute."""
     sgpu = "gpu" if gpu else "cpu"
@@ -79,6 +80,7 @@ def run_validation_sim(
         redundant=redundant,
         prefix=prefix,
         n_unique_beams=n_unique_beams,
+        coupled=coupled,
     )
     if not layout_file.exists():
         raise ValueError(f"Error in creating layout file: {layout_file}")
@@ -98,6 +100,7 @@ def run_validation_sim(
         layout=layout_file.stem,
         redundant=redundant,
         prefix=prefix,
+        coupled=coupled,
     )
 
     # We want to override the job-name to be <sky_model>-<fch>-<ch>, but the last two

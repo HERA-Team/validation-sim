@@ -26,14 +26,24 @@ def make_tele_config(
     spline_interp_order: int = 3,
     beam_interpolator: str = "az_za_map_coordinates",
     unique_beams: tuple[int, ...] = (0,),
+    coupled: bool = False,
 ) -> Path:
     """Make a telescope config file."""
     # make the unique beam pointers. This is really a dummy -- the unique
     # beams are actually all the same file, but we make the simulator treat them
     # as unique to test performance.
     beam_str = ""
-    for beam in unique_beams:
-        beam_str += f"  {int(beam)}: !UVBeam\n    filename: '{paths.BEAMDIR}/NF_HERA_Vivaldi_efield_beam_extrap.fits'\n"
+    if coupled:
+        for i in range(320):
+            beam_str += f"  {i}: !UVBeam\n    filename: '{paths.BEAMDIR}/coupled_beams/ant_{i:03}_coupled_eigenbeam.fits'\n"
+
+        # The isolated beam should be used for all outriggers.
+        beam_str += (
+            f"  {320}: !UVBeam\n    filename: '{paths.BEAMDIR}/coupled_beams/isolated_beam.fits'\n"
+        )
+    else:
+        for beam in unique_beams:
+            beam_str += f"  {int(beam)}: !UVBeam\n    filename: '{paths.BEAMDIR}/NF_HERA_Vivaldi_efield_beam_extrap.fits'\n"
 
     config = f"""
 beam_paths:
@@ -91,6 +101,7 @@ def make_hera_obsparam(
     redundant: bool = False,
     prefix: str = "default",
     n_unique_beams: int = 1,  # -1 implies every antenna unique.
+    coupled_beams: bool = False,
 ):
     """Create an obsparam file."""
     freq_vals = paths.phase_two_freqs()[channels]
@@ -107,7 +118,10 @@ def make_hera_obsparam(
     if isinstance(layout, str):
         # it's a name
         layout_file = paths.make_hera_layout(
-            name=layout, ideal=ideal_layout, n_unique_beams=n_unique_beams
+            name=layout,
+            ideal=ideal_layout,
+            n_unique_beams=n_unique_beams,
+            unique_beams_first=coupled_beams,
         )
     elif isinstance(layout, Path):
         layout_file = layout
@@ -118,6 +132,7 @@ def make_hera_obsparam(
             ants=np.array(layout),
             ideal=ideal_layout,
             n_unique_beams=n_unique_beams,
+            unique_beams_first=coupled_beams,
         )
 
     ants = np.genfromtxt(layout_file, skip_header=1, usecols=(1, 2, 3, 4, 5), delimiter="\t")
@@ -130,6 +145,7 @@ def make_hera_obsparam(
         spline_interp_order=spline_interp_order,
         beam_interpolator=beam_interpolator,
         unique_beams=tuple(unique_beams),
+        coupled=coupled_beams,
     )
 
     modeldir = paths.get_direc(
@@ -138,6 +154,7 @@ def make_hera_obsparam(
         layout=layout_file.stem,
         redundant=redundant,
         prefix=prefix,
+        coupled=coupled_beams,
     )
 
     obsparams_dir = paths.OBSPDIR / modeldir

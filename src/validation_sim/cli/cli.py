@@ -71,11 +71,14 @@ def cli(ctx, log_level, project_dir, conda):
     help="Number of unique beams to use in the simulation (for testing performance of interpolation).",
 )
 @click.option(
+    "--coupled/--isolated", default=False, help="Whether to use coupled beams or isolated beams"
+)
+@click.option(
     "--compress/--no-compress",
     default=True,
 )
 @click.pass_context
-def runsim(ctx, channels, freq_range, n_unique_beams, compress, **kwargs):
+def runsim(ctx, channels, freq_range, n_unique_beams, compress, coupled, **kwargs):
     """Run HERA validation simulations.
 
     Use the default parameters, configuration files, and directories for HERA sims
@@ -90,6 +93,7 @@ def runsim(ctx, channels, freq_range, n_unique_beams, compress, **kwargs):
         n_unique_beams=n_unique_beams,
         conda=ctx.obj["conda"],
         compress=compress,
+        coupled=coupled,
         **kwargs,
     )
 
@@ -110,6 +114,9 @@ def runsim(ctx, channels, freq_range, n_unique_beams, compress, **kwargs):
     default=1,
     help="Number of unique beams to use in the simulation (for testing performance of interpolation).",
 )
+@click.option(
+    "--coupled/--isolated", default=False, help="Whether to use coupled beams or isolated beams"
+)
 @click.option("--beam-interpolator", default="az_za_map_coordinates")
 def make_obsparams(
     layout,
@@ -123,6 +130,7 @@ def make_obsparams(
     redundant,
     do_time_chunks,
     n_unique_beams,
+    coupled,
 ):
     """Make obsparams for H4C simulations given a sky model and frequencies."""
     from ..obsparams import make_hera_obsparam
@@ -140,6 +148,7 @@ def make_obsparams(
         redundant=redundant,
         do_chunks=do_time_chunks,
         n_unique_beams=n_unique_beams,
+        coupled=coupled,
     )
 
 

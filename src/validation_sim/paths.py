@@ -18,7 +18,9 @@ class Paths:
         # These paths and variables define some of the default directories and shared
         # config files for H4C validation simulations
         self.REPODIR = repodir if repodir is not None else Path()
-        self.DIRFMT = "{sky_model}/{prefix}/nt17280-{chunks:05d}chunks-{layout}-{redundant}"
+        self.DIRFMT = (
+            "{sky_model}/{prefix}/nt17280-{chunks:05d}chunks-{layout}-{redundant}-{coupled}"
+        )
         self.FLFMT = "fch{fch:04d}_chunk{ch:05d}"
         self.COMPRESS_FMT = "ch{chunks}_{layout_file}.npy"
 
@@ -94,6 +96,7 @@ class Paths:
         layout: str,
         redundant: bool,
         prefix: str = "default",
+        coupled: bool = False,
     ) -> Path:
         """Get a directory path for a given set of parameters.
 
@@ -108,6 +111,7 @@ class Paths:
                 chunks=chunks,
                 layout=layout,
                 redundant="red" if redundant else "nonred",
+                coupled="coupled" if coupled else "isolated",
             )
         )
 
@@ -208,7 +212,11 @@ class Paths:
         )
 
     def make_hera_layout(
-        self, name: str, ants: np.ndarray | None = None, ideal: bool = True, n_unique_beams: int = 1
+        self,
+        name: str,
+        ants: np.ndarray | None = None,
+        ideal: bool = True,
+        n_unique_beams: int = 1,
     ) -> Path:
         """Create a HERA layout."""
         if ants is None:
@@ -223,8 +231,8 @@ class Paths:
         )
 
         # Get list of beam indices.
-        beam_idx = (
-            np.arange(len(ants)) % n_unique_beams if n_unique_beams > 0 else np.arange(len(ants))
+        beam_idx = np.concatenate(
+            (np.arange(n_unique_beams), np.zeros(len(ants - n_unique_beams), dtype=int))
         )
 
         pth = direc / f"{name}_nbeams{n_unique_beams}.txt"
