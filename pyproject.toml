@@ -15,6 +15,7 @@ dependencies = [
     "cupy-cuda12x>=14.0.1",
     "fftvis",
     "finufft==2.5.1",
+    "grpcio>=1.80.0",
     "healpy>=1.19.0",
     "hera-filters==0.1.7",
     "hera-qm==2.2.0",
@@ -114,9 +115,9 @@ property-decorators = [
 max-complexity = 22
 
 [tool.uv.sources]
-hera-sim = { git = "https://github.com/hera-team/hera_sim", rev = "support-for-multibeam-fftvis" }
-fftvis = { git = "https://github.com/tyler-a-cox/fftvis", rev = "multibeam" }
-matvis = { git = "https://github.com/hera-team/matvis", rev = "fix-memory-copies-getz" }
+hera-sim = { git = "https://github.com/hera-team/hera_sim", rev = "main" }
+fftvis = { git = "https://github.com/tyler-a-cox/fftvis", rev = "main" }
+matvis = { git = "https://github.com/hera-team/matvis", rev = "main" }
 
 [dependency-groups]
 dev = [
