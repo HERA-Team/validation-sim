@@ -35,12 +35,7 @@ def make_tele_config(
     beam_str = ""
     if coupled:
         for i in range(320):
-            beam_str += f"  {i}: !UVBeam\n    filename: '{paths.BEAMDIR}/coupled_beams/ant_{i:03}_coupled_eigenbeam.fits'\n"
-
-        # The isolated beam should be used for all outriggers.
-        beam_str += (
-            f"  {320}: !UVBeam\n    filename: '{paths.BEAMDIR}/coupled_beams/isolated_beam.fits'\n"
-        )
+            beam_str += f"  {i}: !UVBeam\n    filename: '{paths.BEAMDIR}/coupled_eigenbeams/ant_{i:03}_coupled_eigenbeam.fits'\n"
     else:
         for beam in unique_beams:
             beam_str += f"  {int(beam)}: !UVBeam\n    filename: '{paths.BEAMDIR}/NF_HERA_Vivaldi_efield_beam_extrap.fits'\n"
