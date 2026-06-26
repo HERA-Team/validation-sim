@@ -116,7 +116,6 @@ def make_hera_obsparam(
             name=layout,
             ideal=ideal_layout,
             n_unique_beams=n_unique_beams,
-            unique_beams_first=coupled_beams,
         )
     elif isinstance(layout, Path):
         layout_file = layout
@@ -127,7 +126,6 @@ def make_hera_obsparam(
             ants=np.array(layout),
             ideal=ideal_layout,
             n_unique_beams=n_unique_beams,
-            unique_beams_first=coupled_beams,
         )
 
     ants = np.genfromtxt(layout_file, skip_header=1, usecols=(1, 2, 3, 4, 5), delimiter="\t")
