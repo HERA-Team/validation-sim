@@ -130,14 +130,14 @@ def make_hera_obsparam(
 
     ants = np.genfromtxt(layout_file, skip_header=1, usecols=(1, 2, 3, 4, 5), delimiter="\t")
 
-    beam_idx = ants[:, 1]
+    beam_idx = ants[:, 1].astype(int)
     unique_beams = np.unique(beam_idx)
 
     tele_config_file = make_tele_config(
         freq_interp_kind=freq_interp_kind,
         spline_interp_order=spline_interp_order,
         beam_interpolator=beam_interpolator,
-        unique_beams=tuple(unique_beams)[:n_unique_beams],
+        unique_beams=tuple(unique_beams.astype(int))[:n_unique_beams],
         coupled=coupled_beams,
     )
 
