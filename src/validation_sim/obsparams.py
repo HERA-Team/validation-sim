@@ -34,7 +34,7 @@ def make_tele_config(
     # as unique to test performance.
     beam_str = ""
     if coupled:
-        for i in range(320):
+        for i in unique_beams:
             beam_str += f"  {i}: !UVBeam\n    filename: '{paths.BEAMDIR}/coupled_eigenbeams/ant_{i:03}_coupled_eigenbeam.fits'\n"
     else:
         for beam in unique_beams:
@@ -137,7 +137,7 @@ def make_hera_obsparam(
         freq_interp_kind=freq_interp_kind,
         spline_interp_order=spline_interp_order,
         beam_interpolator=beam_interpolator,
-        unique_beams=tuple(unique_beams),
+        unique_beams=tuple(unique_beams)[:n_unique_beams],
         coupled=coupled_beams,
     )
 
