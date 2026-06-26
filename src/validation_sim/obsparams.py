@@ -35,7 +35,7 @@ def make_tele_config(
     beam_str = ""
     if coupled:
         for i in unique_beams:
-            beam_str += f"  {i}: !UVBeam\n    filename: '{paths.BEAMDIR}/coupled_eigenbeams/ant_{i:03}_coupled_eigenbeam.fits'\n"
+            beam_str += f"  {int(i)}: !UVBeam\n    filename: '{paths.BEAMDIR}/coupled_eigenbeams/ant_{int(i):03}_coupled_eigenbeam.fits'\n"
     else:
         for beam in unique_beams:
             beam_str += f"  {int(beam)}: !UVBeam\n    filename: '{paths.BEAMDIR}/NF_HERA_Vivaldi_efield_beam_extrap.fits'\n"
