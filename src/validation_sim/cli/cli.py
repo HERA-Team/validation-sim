@@ -150,7 +150,7 @@ def make_obsparams(
         redundant=redundant,
         do_chunks=do_time_chunks,
         n_unique_beams=n_unique_beams,
-        coupled=coupled,
+        coupled_beams=coupled,
     )
 
 

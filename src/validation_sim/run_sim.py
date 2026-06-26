@@ -83,7 +83,7 @@ def run_validation_sim(
         redundant=redundant,
         prefix=prefix,
         n_unique_beams=n_unique_beams,
-        coupled=coupled,
+        coupled_beams=coupled,
     )
     if not layout_file.exists():
         raise ValueError(f"Error in creating layout file: {layout_file}")
