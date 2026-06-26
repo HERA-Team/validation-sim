@@ -6,6 +6,7 @@ import subprocess
 from importlib.metadata import version
 from pathlib import Path
 
+import hera_sim
 import yaml
 
 from . import paths
@@ -13,6 +14,8 @@ from .cli._utils import _get_sbatch_program
 from .obsparams import make_hera_obsparam
 
 logger = logging.getLogger(__name__)
+
+_HS_VERSION = hera_sim.__version__
 
 
 def calculate_expected_time(chunks: int) -> int:
