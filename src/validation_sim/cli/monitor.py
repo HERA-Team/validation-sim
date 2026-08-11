@@ -1,16 +1,20 @@
-from rich.console import Console
-from rich.rule import Rule
-from rich.panel import Panel
 from pathlib import Path
-import typer
-from core import utils
-import os
+
 import numpy as np
+import typer
+from rich.console import Console
+from rich.panel import Panel
+from rich.rule import Rule
+
+from .. import paths
 
 cns = Console()
 cprint = cns.print
 
+app = typer.Typer()
 
+
+@app.command()
 def main(
     sky_model: list[str] | None = None,
     nchunks: list[int] | None = None,
@@ -25,51 +29,55 @@ def main(
     max_prints: int = 10,
     chunked: bool = False,
 ):
-    logdir = utils.LOGDIR / 'vis'
-    outdir = utils.OUTDIR
+    """Monitor the status of simulation runs."""
+    logdir = paths.LOGDIR / "vis"
+    outdir = paths.OUTDIR
 
-    def globify_options(options, format='', allow_omission=False):
+    def globify_options(options, fmt: str = "", allow_omission: bool = False):
         if options:
             if len(options) == 1:
-                return f"{options[0]:{format}}"
+                return f"{options[0]:{fmt}}"
             else:
-                return "(" + "|".join(f"{o:{format}}" for o in options) + ")"
+                return "(" + "|".join(f"{o:{fmt}}" for o in options) + ")"
         else:
-            return '**' if allow_omission else "*"
+            return "**" if allow_omission else "*"
 
     if channels is None:
         channels = list(range(1536))
 
     sky_glob = globify_options(sky_model)
-    nchunks_glob = globify_options(nchunks, format="05d")
+    nchunks_glob = globify_options(nchunks, fmt="05d")
     layout_glob = globify_options(layout)
     prefix_glob = globify_options(prefix, allow_omission=True)
     if show_redundant and show_nonred:
-        redglob="*"
+        redglob = "*"
     elif show_redundant:
-        redglob="red"
+        redglob = "red"
     elif show_nonred:
-        redglob="nonred"
+        redglob = "nonred"
     else:
         raise ValueError("You can't not show redundant and not redundant.")
 
-    fmt = utils.DIRFMT.replace("{chunks:05d}", "{chunks}")  # to use string glob
+    fmt = paths.DIRFMT.replace("{chunks:05d}", "{chunks}")  # to use string glob
     modelglob = fmt.format(
-        sky_model=sky_glob, prefix=prefix_glob, chunks=nchunks_glob, layout=layout_glob,
-        redundant=redglob
+        sky_model=sky_glob,
+        prefix=prefix_glob,
+        chunks=nchunks_glob,
+        layout=layout_glob,
+        redundant=redglob,
     )
-    
+
     cprint(f"Model glob: {modelglob}")
 
     if chunked:
         check_chunked(outdir, modelglob)
         return
-    
+
     all_log_models = [pth.relative_to(logdir) for pth in sorted(logdir.glob(modelglob))]
     all_out_models = [pth.relative_to(outdir) for pth in sorted(outdir.glob(modelglob))]
-    
+
     for mdl in all_log_models:
-        parameters = utils.parse_direc(mdl)
+        parameters = paths.parse_direc(mdl)
 
         cprint(Rule(str(mdl)))
 
@@ -78,30 +86,25 @@ def main(
             cprint("[red]No outputs found...")
             break
 
-        chunks_list = list(range(parameters['chunks'])) if chunks is None else chunks
+        chunks_list = list(range(parameters["chunks"])) if chunks is None else chunks
         files = []
         for channel in channels:
             for chunk in chunks_list:
-                fname = utils.get_file(chunk=chunk, channel=channel, with_dir=False).name
+                fname = paths.get_file(chunk=chunk, channel=channel, with_dir=False).name
                 # Get the *latest* logfile
                 logfl = sorted((logdir / mdl).glob(f"{fname}-*.out"))
-                logfl = logfl[-1] if len(logfl)>0 else None
+                logfl = logfl[-1] if len(logfl) > 0 else None
 
                 # Get the only output
                 outfl = sorted((outdir / mdl).glob(f"{fname}.uvh5"))
                 outfl = outfl[0] if outfl else None
-                if outfl is not None:
-                    flsize = os.stat(outfl).st_size
-                else:
-                    flsize = None
+                flsize = outfl.stat().st_size if outfl is not None else None
                 files.append((channel, chunk, logfl, outfl, flsize))
-    
+
         npassed = len([x for x in files if x[2] is not None and x[3] is not None])
         cprint(f"[green]{npassed} files are completed properly.")
 
-        if run_without_log := [
-            x[3] for x in files if x[2] is None and x[3] is not None
-        ]:
+        if run_without_log := [x[3] for x in files if x[2] is None and x[3] is not None]:
             cprint(f"[orange]{len(run_without_log)} files are complete, but have no log:")
             for x in run_without_log:
                 cprint(f"\t{x.name}")
@@ -110,26 +113,27 @@ def main(
         # Get files that are run, but have a weird size.
         mean_size = np.median([x[4] for x in files if x[4] is not None])
         if weird_size := [
-            (x[3], x[4]) for x in files if x[4] is not None and (x[4] < mean_size - 1000 or x[4] > mean_size + 1000)
+            (x[3], x[4])
+            for x in files
+            if x[4] is not None and (x[4] < mean_size - 1000 or x[4] > mean_size + 1000)
         ]:
-            cprint(f"[red]{len(weird_size)} files have odd sizes: (median {mean_size/1024**3:.3f} GB)")
+            cprint(
+                f"[red]{len(weird_size)} files have odd sizes: (median {mean_size / 1024**3:.3f} GB)"
+            )
             for outfl, flsize in weird_size:
-                cprint(f"\t{outfl.relative_to(Path(__file__).parent)}: {flsize/1024**3:.3f} GB")
-        
-        if run_with_error := [
-            x[2] for x in files if x[2] is not None and x[3] is None
-        ]:
+                cprint(f"\t{outfl.relative_to(paths.REPODIR)}: {flsize / 1024**3:.3f} GB")
+
+        if run_with_error := [x[2] for x in files if x[2] is not None and x[3] is None]:
             cprint(f"[red]{len(run_with_error)} files errored:")
             run_with_error = run_with_error[:max_prints]
-            
+
             for x in run_with_error:
-                cprint(f"\t{x.relative_to(Path(__file__).parent)}")
+                cprint(f"\t{x.relative_to(paths.REPODIR)}")
             cprint()
-    
-            with open(run_with_error[-1], 'r') as fl:
-                last_ten_lines = fl.readlines()[-10:]            
+
+            with open(run_with_error[-1]) as fl:
+                last_ten_lines = fl.readlines()[-10:]
                 cprint(Panel("\n".join(last_ten_lines), title="Error Message"))
-            
 
         if not hide_not_run:
             not_yet_run = [x[:2] for x in files if x[2] is None and x[3] is None]
@@ -138,7 +142,8 @@ def main(
                 for x in not_yet_run:
                     cprint(f"channel = {x[0]:04d}, chunk = {x[1]:04d}")
         cprint()
-            
+
+
 def check_chunked(
     outdir: Path,
     modelglob: str,
@@ -177,19 +182,23 @@ def check_chunked(
             meta = FastUVH5Meta(fl)
 
             incorrect_shapes = []
-            if meta.datagrp['visdata'].shape != (chunksize*nbls, nfreqs_expected, npols):
+            if meta.datagrp["visdata"].shape != (
+                chunksize * nbls,
+                nfreqs_expected,
+                npols,
+            ):
                 incorrect_shapes.append(fl)
 
             got_zeros = []
-            d = meta.datagrp['visdata'][0, :, 0]
-            if np.any(d==0):
-                got_zeros.append((fl, np.sum(d==0)))    
+            d = meta.datagrp["visdata"][0, :, 0]
+            if np.any(d == 0):
+                got_zeros.append((fl, np.sum(d == 0)))
 
         if incorrect_shapes:
             cprint("[red]Some files have incorrect data shapes:")
             for fl in incorrect_shapes:
                 cprint(f"{fl}")
-                
+
         if got_zeros:
             cprint("[red]Some files have data that is zero for some frequencies:")
             for fl, nzeros in got_zeros:
@@ -199,5 +208,6 @@ def check_chunked(
             cprint("[green]All files completed without error!")
 
         cprint()
-if __name__ == '__main__':
-    typer.run(main)
+
+
+type_click_app = typer.main.get_command(app)

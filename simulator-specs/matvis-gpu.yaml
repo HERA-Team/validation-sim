@@ -1,6 +1,7 @@
 simulator: MatVis
 precision: 2
-ref_time: mean
-correct_source_positions: true
+coord_method: "GPUCoordinateRotationERFA"
+coord_method_params:
+  update_bcrs_every: 1000000 # seconds before updating (this is more than a day, so never update -- fast and no jitter)
 use_gpu: true
 check_antenna_conjugation: false

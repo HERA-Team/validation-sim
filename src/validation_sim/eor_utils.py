@@ -45,7 +45,8 @@ def true_power_spectrum(
     pgps: ParameterizedGaussianPowerSpectrum, 
     k: np.ndarray, 
     z: float, 
-    rescale_idx: float=-11, 
+    rescale_func: callable = None,
+    rescale_idx: float = None, 
     littleh: bool=True
 ) -> np.ndarray:
     """Compute the true power spectrum from a GRF model."""
@@ -57,8 +58,11 @@ def true_power_spectrum(
     
     # redshift dimming factor
     Pk *= (zconst.nu_e * 1e6/nu_z)**-2
-    Pk *= (nu_z / 100e6)**rescale_idx
-    
+    if rescale_idx is not None:
+        Pk *= (nu_z / 100e6)**rescale_idx
+    elif rescale_func is not None:
+        Pk *= rescale_func(z)
+        
     # little-h "units"
     Pk *= h**3
     
@@ -89,11 +93,12 @@ def tapered_power_spectrum(
     k: np.ndarray, 
     uvp: hp.UVPSpec, 
     spw: int, 
-    rescale_idx: float=-11, 
+    rescale_func: callable = None,
+    rescale_idx: float = None, 
     littleh: bool=True
 ) -> np.ndarray:
     z = np.mean(get_zs(cosmo, uvp, spw))
-    Pk = true_power_spectrum(cosmo, pgps, k, z, rescale_idx=rescale_idx, littleh=littleh)
+    Pk = true_power_spectrum(cosmo, pgps, k, z,littleh=littleh, rescale_idx=rescale_idx, rescale_func=rescale_func)
 
     freqs = get_freqs(uvp, spw)
     alpha = cosmo.dRpara_df(z)
@@ -110,13 +115,14 @@ def expected_power_spectrum(
     k: np.ndarray, 
     uvp: hp.UVPSpec, 
     spw: int, 
-    rescale_idx: float=-11, 
+    rescale_func: callable = None,
+    rescale_idx: float = None, 
     littleh: bool=True, 
     nterms: int=20
 ) -> np.ndarray:
     ks, z = get_ks(cosmo, uvp, spw)
     
-    tps = partial(tapered_power_spectrum, cosmo=cosmo, pgps=pgps, spw=spw, uvp=uvp, rescale_idx=rescale_idx, littleh=littleh)
+    tps = partial(tapered_power_spectrum, cosmo=cosmo, pgps=pgps, spw=spw, uvp=uvp, rescale_idx=rescale_idx, littleh=littleh, rescale_func=rescale_func)
     
     Pk = tps(k=k)
     for n in range(1,nterms):

@@ -4,3 +4,4 @@ coord_method: CoordinateRotationERFA
 coord_method_params:
   update_bcrs_every: 100000000
 check_antenna_conjugation: false
+max_memory: 22212254720  # 20 GB -- good for 16 cores on RM-Shared.

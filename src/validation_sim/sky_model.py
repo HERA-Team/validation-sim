@@ -1,4 +1,5 @@
 """Utilities for creating sky models."""
+
 import logging
 from functools import cache, cached_property
 
@@ -14,19 +15,24 @@ from scipy import integrate
 from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.stats import gaussian_kde
 
-from . import utils
+from . import paths
 
 logger = logging.getLogger(__name__)
 
-H4C_FREQS = utils.FREQS_DICT["H4C"] * units.Hz
-ATEAM_MODEL_FILE = utils.RAWSKYDIR / "ateam.skyh5"
+H4C_FREQS = paths.phase_two_freqs() * units.Hz
+ATEAM_MODEL_FILE = paths.RAWSKYDIR / "ateam.skyh5"
 
 
-def write_sky(sky: SkyModel, model: str, channel: int):
+def write_sky(sky: SkyModel, model: str, channel: int | None):
     """Write a particular channel of a sky model to file."""
-    d = utils.SKYDIR / model
+    d = paths.SKYDIR / model
     d.mkdir(parents=True, exist_ok=True)
-    sky.write_skyh5(f"{d}/fch{channel:04d}.skyh5", clobber=True)
+    if channel is not None:
+        sky.write_skyh5(f"{d}/fch{channel:04d}.skyh5", clobber=True)
+        logger.info(f"Wrote {model} channel {channel} to {d}/fch{channel:04d}.skyh5")
+    else:
+        sky.write_skyh5(f"{d}/full.skyh5", clobber=True)
+        logger.info(f"Wrote full {model} to {d}/full.skyh5")
 
 
 def randsphere(n, theta_range=(0, np.pi), phi_range=(0, 2 * np.pi)):
@@ -72,26 +78,23 @@ def dnds_franzen(s, a=None, norm=False):
         return s**-2.5 * out
 
 
-def make_grf_eor_model(
-    model_file: str, channels: list[int], label: str = ""
-):
+def make_grf_eor_model(model_file: str, channels: list[int], label: str = ""):
     """Make a GRF EoR SkyModel.
 
     The model file is here assumed to contain Nfreqs healpix maps. The format of the
     file is custom, as defined by @zacharymartinot, and the sky map is created by
     his redshifted_gaussian_field code.
     """
-    model_dir = utils.SKYDIR / "eor"
+    model_dir = paths.SKYDIR / "eor"
 
     with h5py.File(model_dir / model_file, "r") as fl:
-        shape =  fl['healpix_maps'].shape
-        nside = int(np.sqrt(shape[1]/12))
-        
-    freqs = H4C_FREQS.copy()
-#        freqs = fl["frequencies_mhz"][:] * 1e6 << units.Hz  # units Hz
+        shape = fl["healpix_maps"].shape
+        nside = int(np.sqrt(shape[1] / 12))
 
-        # HEALPix array -- dimension (nfreqs, npix) -- unit Jy/sr
-        # We must read in the whole thing to set the monopole.
+    freqs = H4C_FREQS.copy()
+
+    # HEALPix array -- dimension (nfreqs, npix) -- unit Jy/sr
+    # We must read in the whole thing to set the monopole.
 
     npix = hp.nside2npix(nside)
 
@@ -112,13 +115,12 @@ def make_grf_eor_model(
 
     eor_model = SkyModel(**params)
 
-    outdir = utils.SKYDIR / f"eor-grf-{nside}{label}"
+    outdir = paths.SKYDIR / f"eor-grf-{nside}{label}"
     outdir.mkdir(parents=True, exist_ok=True)
 
     for fch in channels:
         logger.info(f"Constructing channel {fch}")
-        with h5py.File(model_dir / model_file, 'r') as fl:
-            
+        with h5py.File(model_dir / model_file, "r") as fl:
             hmaps = fl["healpix_maps"][fch]
 
         hmaps <<= units.Jy / units.sr
@@ -169,14 +171,10 @@ class FranzenSourceCounts:
 
         return FranzenSourceCounts(smin, smax, self._base_svec, self._base_cdf)
 
-    def with_nsources_per_pixel(
-        self, nsources: int, nside: int
-    ) -> "FranzenSourceCounts":
+    def with_nsources_per_pixel(self, nsources: int, nside: int) -> "FranzenSourceCounts":
         """Return a new object that sets Smin based on a desired number of sources."""
         pixarea = hp.nside2pixarea(nside)
-        smin_idx = np.argwhere(self.cumulative_source_density * pixarea > nsources)[0][
-            0
-        ]
+        smin_idx = np.argwhere(self.cumulative_source_density * pixarea > nsources)[0][0]
         return FranzenSourceCounts(
             smin=self.svec[smin_idx],
             smax=self.smax,
@@ -273,7 +271,8 @@ def make_gleam_like_model(
     mean_spectral_index: float, optional
         The mean spectral index of the sources. The default is -0.8.
     sigma_spectral_index: float, optional
-        The standard deviation of the spectral index of the sources. The default is 0.05.
+        The standard deviation of the spectral index of the sources.
+        The default is 0.05.
     nside: int, optional
         The healpix nside parameter to use, to choose the approximate number of
         sources. Fainter sources are not simulated. The default is 256.
@@ -284,9 +283,11 @@ def make_gleam_like_model(
         A SkyModel representing the GLEAM-like sources.
 
     """
-    if spectral_index > 0:
-        raise ValueError("Spectral index should be negative (i.e. it is not made negative by pyradiosky")
-        
+    if mean_spectral_index > 0:
+        raise ValueError(
+            "Spectral index should be negative (i.e. it is not made negative by pyradiosky)"
+        )
+
     np.random.seed(seed)
     source_counts = (
         franzen_base()
@@ -314,7 +315,6 @@ def make_gleam_like_model(
     # Reference frequency is 154 MHz
     ref_freq = 154e6 * np.ones(nsources) * units.Hz
 
-        
     gl_model_params = {
         "name": names,
         "ra": ra,
@@ -390,9 +390,7 @@ def make_ateam_model() -> SkyModel:
     # Spectral indices.
     # Fluxes for sources peeled from GLEAM are given at 200 MHz.
     # Flux of Fornax was given at 154 MHz.
-    reference_frequency = (
-        np.array([200 for i in range(nsources - 1)] + [154]) * 1e6 * units.Hz
-    )
+    reference_frequency = np.array([200 for i in range(nsources - 1)] + [154]) * 1e6 * units.Hz
     spectral_index = [
         -0.96,
         -0.50,
@@ -421,7 +419,9 @@ def make_ateam_model() -> SkyModel:
     return SkyModel(**ateam_model_params)
 
 
-def make_ptsrc_model(channels: list[int], nside: int = 256, label="", **kw):
+def make_ptsrc_model(
+    channels: list[int], nside: int = 256, label="", per_channel_files: bool = False, **kw
+):
     """Create a point-source model."""
     # Load GLEAM-like and A-Team SkyModel objects, making them if they do not exist
     # in the default path
@@ -437,6 +437,14 @@ def make_ptsrc_model(channels: list[int], nside: int = 256, label="", **kw):
     gleam_like = make_gleam_like_model(
         nside=nside, max_flux_density=ateam.stokes[0].min().to_value("Jy"), **kw
     )
+
+    ptsrc = gleam_like.concat(ateam, inplace=False)
+
+    # Write full-sky model.
+    write_sky(ptsrc, f"ptsrc{nside}{label}", None)
+
+    if not per_channel_files:
+        return
 
     # Evaluate the models at a given frequency
     for fch in channels:
@@ -565,7 +573,7 @@ def make_gsm_model(channels: list[int], nside: int = 256, label="") -> SkyModel:
     freqs = H4C_FREQS[channels]
     gsm = GlobalSkyModel(freq_unit=freqs[0].unit)
 
-    for fch, freq in zip(channels, freqs):
+    for fch, freq in zip(channels, freqs, strict=False):
         gsm_map = make_gsm_map(freq, nside=nside, smooth=True, gsm=gsm)
         gsm_model = make_healpix_type_sky_model(
             gsm_map, freq, nside, inframe="galactic", outframe="icrs", to_point=True
@@ -578,7 +586,7 @@ def make_diffuse_model(channels: int, nside: int = 256, with_confusion=True, lab
     freqs = H4C_FREQS[channels]
     gsm = GlobalSkyModel(freq_unit=freqs[0].unit)
 
-    for fch, freq in zip(channels, freqs):
+    for fch, freq in zip(channels, freqs, strict=True):
         gsm_map = make_gsm_map(freq, nside=nside, smooth=True, gsm=gsm)
         confusion_map = make_confusion_map(freq, nside=nside) if with_confusion else 0
         diffuse_map = gsm_map + confusion_map
@@ -586,5 +594,3 @@ def make_diffuse_model(channels: int, nside: int = 256, with_confusion=True, lab
             diffuse_map, freq, nside, inframe="galactic", outframe="icrs", to_point=True
         )
         write_sky(diffuse_model, f"diffuse_nside{nside}{label}", fch)
-
-
